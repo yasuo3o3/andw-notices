@@ -1,0 +1,310 @@
+# ANDW Notices Japanese Translation
+# Copyright (C) 2024 yasuo3o3
+# This file is distributed under the same license as the ANDW Notices package.
+msgid ""
+msgstr ""
+"Project-Id-Version: ANDW Notices 0.0.1\n"
+"Report-Msgid-Bugs-To: https://yasuo-o.xyz/\n"
+"POT-Creation-Date: 2024-10-10 12:00+0000\n"
+"PO-Revision-Date: 2024-10-10 12:00+0900\n"
+"Last-Translator: yasuo3o3 <dev@yasuo-o.xyz>\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# Post Type Labels
+msgid "お知らせ"
+msgstr "お知らせ"
+
+msgid "新規追加"
+msgstr "新規追加"
+
+msgid "新しいお知らせを追加"
+msgstr "新しいお知らせを追加"
+
+msgid "新しいお知らせ"
+msgstr "新しいお知らせ"
+
+msgid "お知らせを編集"
+msgstr "お知らせを編集"
+
+msgid "お知らせを表示"
+msgstr "お知らせを表示"
+
+msgid "すべてのお知らせ"
+msgstr "すべてのお知らせ"
+
+msgid "お知らせを検索"
+msgstr "お知らせを検索"
+
+msgid "親のお知らせ:"
+msgstr "親のお知らせ:"
+
+msgid "お知らせが見つかりませんでした。"
+msgstr "お知らせが見つかりませんでした。"
+
+msgid "ゴミ箱にお知らせは見つかりませんでした。"
+msgstr "ゴミ箱にお知らせは見つかりませんでした。"
+
+msgid "アイキャッチ画像"
+msgstr "アイキャッチ画像"
+
+msgid "アイキャッチ画像を設定"
+msgstr "アイキャッチ画像を設定"
+
+msgid "アイキャッチ画像を削除"
+msgstr "アイキャッチ画像を削除"
+
+msgid "アイキャッチ画像として使用"
+msgstr "アイキャッチ画像として使用"
+
+msgid "お知らせアーカイブ"
+msgstr "お知らせアーカイブ"
+
+msgid "お知らせに挿入"
+msgstr "お知らせに挿入"
+
+msgid "このお知らせにアップロード"
+msgstr "このお知らせにアップロード"
+
+msgid "お知らせ一覧をフィルタ"
+msgstr "お知らせ一覧をフィルタ"
+
+msgid "お知らせ一覧ナビゲーション"
+msgstr "お知らせ一覧ナビゲーション"
+
+msgid "お知らせ一覧"
+msgstr "お知らせ一覧"
+
+# Meta Fields
+msgid "お知らせ設定"
+msgstr "お知らせ設定"
+
+msgid "表示日"
+msgstr "表示日"
+
+msgid "YYYY-MM-DD または YYYY-MM-DD HH:MM:SS"
+msgstr "YYYY-MM-DD または YYYY-MM-DD HH:MM:SS"
+
+msgid "未設定の場合は公開日が使用されます。"
+msgstr "未設定の場合は公開日が使用されます。"
+
+msgid "リンクタイプ"
+msgstr "リンクタイプ"
+
+msgid "自身のページ"
+msgstr "自身のページ"
+
+msgid "内部ページ"
+msgstr "内部ページ"
+
+msgid "外部URL"
+msgstr "外部URL"
+
+msgid "対象投稿・固定ページ"
+msgstr "対象投稿・固定ページ"
+
+msgid "投稿・ページを選択"
+msgstr "投稿・ページを選択"
+
+msgid "リンク先の投稿または固定ページを選択してください。"
+msgstr "リンク先の投稿または固定ページを選択してください。"
+
+msgid "リンク先の外部URLを入力してください。"
+msgstr "リンク先の外部URLを入力してください。"
+
+msgid "新規タブで開く"
+msgstr "新規タブで開く"
+
+msgid "新規タブで開く（target=\"_blank\"）"
+msgstr "新規タブで開く（target=\"_blank\"）"
+
+# Admin Columns
+msgid "リンク先"
+msgstr "リンク先"
+
+msgid "公開日を使用"
+msgstr "公開日を使用"
+
+msgid "外部URL（未設定）"
+msgstr "外部URL（未設定）"
+
+msgid "内部ページ（削除済み）"
+msgstr "内部ページ（削除済み）"
+
+msgid "内部ページ（未設定）"
+msgstr "内部ページ（未設定）"
+
+# Block
+msgid "お知らせ一覧プレビュー"
+msgstr "お知らせ一覧プレビュー"
+
+msgid "お知らせを読み込み中..."
+msgstr "お知らせを読み込み中..."
+
+msgid "お知らせが見つかりませんでした。投稿を作成してください。"
+msgstr "お知らせが見つかりませんでした。投稿を作成してください。"
+
+msgid "表示設定"
+msgstr "表示設定"
+
+msgid "表示件数"
+msgstr "表示件数"
+
+msgid "並び順"
+msgstr "並び順"
+
+msgid "降順（新しい順）"
+msgstr "降順（新しい順）"
+
+msgid "昇順（古い順）"
+msgstr "昇順（古い順）"
+
+msgid "並び基準"
+msgstr "並び基準"
+
+msgid "公開日"
+msgstr "公開日"
+
+msgid "レイアウト"
+msgstr "レイアウト"
+
+msgid "リスト"
+msgstr "リスト"
+
+msgid "カード"
+msgstr "カード"
+
+msgid "フィルター設定"
+msgstr "フィルター設定"
+
+msgid "外部リンクを含める"
+msgstr "外部リンクを含める"
+
+msgid "内部リンクを含める"
+msgstr "内部リンクを含める"
+
+msgid "表示要素"
+msgstr "表示要素"
+
+msgid "日付を表示"
+msgstr "日付を表示"
+
+msgid "タイトルを表示"
+msgstr "タイトルを表示"
+
+msgid "抜粋を表示"
+msgstr "抜粋を表示"
+
+msgid "抜粋の文字数"
+msgstr "抜粋の文字数"
+
+msgid "リンク設定"
+msgstr "リンク設定"
+
+msgid "リンク動作の上書き"
+msgstr "リンク動作の上書き"
+
+msgid "アイテム設定を尊重"
+msgstr "アイテム設定を尊重"
+
+msgid "すべて自身のページ"
+msgstr "すべて自身のページ"
+
+msgid "すべて外部URL"
+msgstr "すべて外部URL"
+
+msgid "すべて内部ページ"
+msgstr "すべて内部ページ"
+
+msgid "リンクなし"
+msgstr "リンクなし"
+
+msgid "新規タブで開く（一括設定）"
+msgstr "新規タブで開く（一括設定）"
+
+msgid "チェックしない場合は各アイテムの設定を使用"
+msgstr "チェックしない場合は各アイテムの設定を使用"
+
+# Settings
+msgid "ANDW 新着お知らせ設定"
+msgstr "ANDW 新着お知らせ設定"
+
+msgid "設定"
+msgstr "設定"
+
+msgid "基本設定"
+msgstr "基本設定"
+
+msgid "お知らせプラグインの基本設定を行います。"
+msgstr "お知らせプラグインの基本設定を行います。"
+
+msgid "抜粋の既定文字数"
+msgstr "抜粋の既定文字数"
+
+msgid "ブロックで抜粋を表示する際の既定文字数です。"
+msgstr "ブロックで抜粋を表示する際の既定文字数です。"
+
+msgid "許可するURLプロトコル"
+msgstr "許可するURLプロトコル"
+
+msgid "HTTP"
+msgstr "HTTP"
+
+msgid "HTTPS"
+msgstr "HTTPS"
+
+msgid "FTP"
+msgstr "FTP"
+
+msgid "外部URLで許可するプロトコルを選択してください。"
+msgstr "外部URLで許可するプロトコルを選択してください。"
+
+msgid "日付フォーマット上書き"
+msgstr "日付フォーマット上書き"
+
+msgid "日付表示フォーマットを上書きします。空の場合はWordPressの設定（%s）を使用します。"
+msgstr "日付表示フォーマットを上書きします。空の場合はWordPressの設定（%s）を使用します。"
+
+msgid "例: Y年n月j日、Y-m-d、j F Y"
+msgstr "例: Y年n月j日、Y-m-d、j F Y"
+
+msgid "キャッシュ設定"
+msgstr "キャッシュ設定"
+
+msgid "ブロック表示のキャッシュ設定を行います。"
+msgstr "ブロック表示のキャッシュ設定を行います。"
+
+msgid "キャッシュ有効期間（秒）"
+msgstr "キャッシュ有効期間（秒）"
+
+msgid "ブロック表示のキャッシュ有効期間を秒単位で設定します。"
+msgstr "ブロック表示のキャッシュ有効期間を秒単位で設定します。"
+
+msgid "キャッシュクリア"
+msgstr "キャッシュクリア"
+
+msgid "キャッシュをクリア"
+msgstr "キャッシュをクリア"
+
+msgid "お知らせブロックのキャッシュをすべてクリアします。"
+msgstr "お知らせブロックのキャッシュをすべてクリアします。"
+
+msgid "キャッシュをクリアしました。"
+msgstr "キャッシュをクリアしました。"
+
+# Sample Content
+msgid "サンプルお知らせ1"
+msgstr "サンプルお知らせ1"
+
+msgid "サンプルお知らせ2"
+msgstr "サンプルお知らせ2"
+
+msgid "これはサンプルのお知らせです。実際の投稿を作成してください。"
+msgstr "これはサンプルのお知らせです。実際の投稿を作成してください。"
+
+msgid "お知らせの内容がここに表示されます。"
+msgstr "お知らせの内容がここに表示されます。"

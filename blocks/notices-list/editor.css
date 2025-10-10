@@ -1,0 +1,24 @@
+/* エディター専用スタイル */
+.andw-notices-block-preview {
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 20px;
+	background: #f9f9f9;
+}
+
+.andw-notices-block-title {
+	margin: 0 0 15px 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #555;
+	text-align: center;
+	border-bottom: 1px solid #ddd;
+	padding-bottom: 10px;
+}
+
+.andw-notices-no-content {
+	text-align: center;
+	color: #666;
+	font-style: italic;
+	margin: 20px 0;
+}

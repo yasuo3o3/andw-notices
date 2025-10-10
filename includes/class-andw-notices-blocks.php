@@ -1,0 +1,306 @@
+<?php
+/**
+ * Gutenbergブロックの登録と管理
+ *
+ * @package ANDW_Notices
+ */
+
+// このファイルに直接アクセスするのを防ぐ
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+/**
+ * ブロッククラス
+ */
+class ANDW_Notices_Blocks {
+
+	/**
+	 * 初期化
+	 */
+	public static function init() {
+		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
+		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_editor_assets' ) );
+	}
+
+	/**
+	 * ブロックの登録
+	 */
+	public static function register_blocks() {
+		register_block_type(
+			ANDW_NOTICES_PLUGIN_DIR . 'blocks/notices-list/block.json',
+			array(
+				'render_callback' => array( __CLASS__, 'render_notices_list_block' ),
+			)
+		);
+	}
+
+	/**
+	 * エディターアセットの読み込み
+	 */
+	public static function enqueue_editor_assets() {
+		$asset_file = ANDW_NOTICES_PLUGIN_DIR . 'build/index.asset.php';
+
+		if ( file_exists( $asset_file ) ) {
+			$asset = include $asset_file;
+
+			wp_enqueue_script(
+				'andw-notices-blocks',
+				ANDW_NOTICES_PLUGIN_URL . 'build/index.js',
+				$asset['dependencies'],
+				$asset['version'],
+				true
+			);
+
+			wp_set_script_translations(
+				'andw-notices-blocks',
+				'andw-notices',
+				ANDW_NOTICES_PLUGIN_DIR . 'languages'
+			);
+		}
+	}
+
+	/**
+	 * お知らせ一覧ブロックのレンダリング
+	 *
+	 * @param array    $attributes ブロック属性
+	 * @param string   $content ブロックコンテンツ
+	 * @param WP_Block $block ブロックインスタンス
+	 * @return string レンダリング結果
+	 */
+	public static function render_notices_list_block( $attributes, $content, $block ) {
+		// デフォルト属性
+		$default_attributes = array(
+			'count'             => 5,
+			'order'             => 'desc',
+			'orderby'           => 'display_date',
+			'includeExternal'   => true,
+			'includeInternal'   => true,
+			'showDate'          => true,
+			'showTitle'         => true,
+			'showExcerpt'       => true,
+			'excerptLength'     => 100,
+			'forceLinkOverride' => 'item',
+			'openInNewTab'      => null,
+			'layout'            => 'list',
+		);
+
+		$attributes = wp_parse_args( $attributes, $default_attributes );
+
+		// キャッシュキーの生成
+		$cache_key = self::generate_cache_key( $attributes );
+		$cached_content = wp_cache_get( $cache_key, 'andw_notices_blocks' );
+
+		if ( false !== $cached_content && ! is_preview() ) {
+			return $cached_content;
+		}
+
+		// お知らせの取得
+		$notices = self::get_notices_for_block( $attributes );
+
+		if ( empty( $notices ) ) {
+			$no_content_message = '<p class="andw-notices-no-content">' . esc_html__( 'お知らせが見つかりませんでした。', 'andw-notices' ) . '</p>';
+			wp_cache_set( $cache_key, $no_content_message, 'andw_notices_blocks', HOUR_IN_SECONDS );
+			return $no_content_message;
+		}
+
+		// HTMLの生成
+		$html = self::generate_notices_html( $notices, $attributes );
+
+		// キャッシュに保存
+		wp_cache_set( $cache_key, $html, 'andw_notices_blocks', HOUR_IN_SECONDS );
+
+		return $html;
+	}
+
+	/**
+	 * ブロック用お知らせデータの取得
+	 *
+	 * @param array $attributes ブロック属性
+	 * @return array お知らせデータ
+	 */
+	private static function get_notices_for_block( $attributes ) {
+		$args = array(
+			'post_type'      => 'notices',
+			'post_status'    => 'publish',
+			'posts_per_page' => absint( $attributes['count'] ),
+			'order'          => strtoupper( $attributes['order'] ),
+		);
+
+		// 並び順の設定
+		if ( 'display_date' === $attributes['orderby'] ) {
+			$args['meta_key'] = 'andw_notices_display_date';
+			$args['orderby'] = 'meta_value';
+			$args['meta_query'] = array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'andw_notices_display_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => 'andw_notices_display_date',
+					'compare' => 'NOT EXISTS',
+				),
+			);
+		} else {
+			$args['orderby'] = 'date';
+		}
+
+		// フィルタリング
+		if ( ! $attributes['includeExternal'] || ! $attributes['includeInternal'] ) {
+			$meta_query = array( 'relation' => 'OR' );
+
+			if ( $attributes['includeExternal'] ) {
+				$meta_query[] = array(
+					'key'   => 'andw_notices_link_type',
+					'value' => 'external',
+				);
+			}
+
+			if ( $attributes['includeInternal'] ) {
+				$meta_query[] = array(
+					'key'   => 'andw_notices_link_type',
+					'value' => array( 'self', 'internal' ),
+					'compare' => 'IN',
+				);
+			}
+
+			$args['meta_query'] = isset( $args['meta_query'] )
+				? array( 'relation' => 'AND', $args['meta_query'], $meta_query )
+				: $meta_query;
+		}
+
+		$query = new WP_Query( $args );
+		return $query->posts;
+	}
+
+	/**
+	 * お知らせHTMLの生成
+	 *
+	 * @param array $notices お知らせデータ
+	 * @param array $attributes ブロック属性
+	 * @return string HTML
+	 */
+	private static function generate_notices_html( $notices, $attributes ) {
+		$layout_class = 'list' === $attributes['layout'] ? 'andw-notices' : 'andw-notices andw-notices-card';
+		$html = '<ul class="' . esc_attr( $layout_class ) . '">';
+
+		foreach ( $notices as $notice ) {
+			$html .= '<li class="andw-notice-item">';
+
+			// 日付の表示
+			if ( $attributes['showDate'] ) {
+				$display_date = ANDW_Notices_Post_Type::get_notice_display_date( $notice->ID );
+				$iso_date = ANDW_Notices_Post_Type::get_notice_display_date_iso( $notice->ID );
+				$formatted_date = mysql2date( get_option( 'date_format' ), $display_date );
+
+				$html .= '<time class="andw-notice-date" datetime="' . esc_attr( $iso_date ) . '">';
+				$html .= esc_html( $formatted_date );
+				$html .= '</time>';
+			}
+
+			// タイトルの表示
+			if ( $attributes['showTitle'] ) {
+				$title = get_the_title( $notice->ID );
+				$link_url = self::get_notice_link_url( $notice->ID, $attributes );
+				$link_target = self::get_notice_link_target( $notice->ID, $attributes );
+
+				$html .= '<h3 class="andw-notice-title">';
+				if ( $link_url && 'null' !== $attributes['forceLinkOverride'] ) {
+					$html .= '<a href="' . esc_url( $link_url ) . '"' . $link_target . '>';
+					$html .= esc_html( $title );
+					$html .= '</a>';
+				} else {
+					$html .= esc_html( $title );
+				}
+				$html .= '</h3>';
+			}
+
+			// 抜粋の表示
+			if ( $attributes['showExcerpt'] ) {
+				$excerpt = get_the_excerpt( $notice->ID );
+				if ( $excerpt ) {
+					$trimmed_excerpt = self::trim_excerpt( $excerpt, $attributes['excerptLength'] );
+					$html .= '<p class="andw-notice-excerpt">' . esc_html( $trimmed_excerpt ) . '</p>';
+				}
+			}
+
+			$html .= '</li>';
+		}
+
+		$html .= '</ul>';
+
+		return $html;
+	}
+
+	/**
+	 * お知らせのリンクURLを取得
+	 *
+	 * @param int   $post_id 投稿ID
+	 * @param array $attributes ブロック属性
+	 * @return string リンクURL
+	 */
+	private static function get_notice_link_url( $post_id, $attributes ) {
+		// 強制リンクオーバーライドの処理
+		switch ( $attributes['forceLinkOverride'] ) {
+			case 'self':
+				return get_permalink( $post_id );
+
+			case 'external':
+				$external_url = get_post_meta( $post_id, 'andw_notices_external_url', true );
+				return $external_url ? esc_url( $external_url ) : get_permalink( $post_id );
+
+			case 'internal':
+				$target_post_id = get_post_meta( $post_id, 'andw_notices_target_post_id', true );
+				return $target_post_id ? get_permalink( $target_post_id ) : get_permalink( $post_id );
+
+			case 'null':
+				return '';
+
+			default:
+				return ANDW_Notices_Post_Type::get_notice_link_url( $post_id );
+		}
+	}
+
+	/**
+	 * お知らせのリンクターゲットを取得
+	 *
+	 * @param int   $post_id 投稿ID
+	 * @param array $attributes ブロック属性
+	 * @return string リンクターゲット属性
+	 */
+	private static function get_notice_link_target( $post_id, $attributes ) {
+		// 一括設定が優先
+		if ( null !== $attributes['openInNewTab'] ) {
+			return $attributes['openInNewTab'] ? ' target="_blank" rel="noopener"' : '';
+		}
+
+		// 個別設定を使用
+		return ANDW_Notices_Post_Type::get_notice_link_target( $post_id );
+	}
+
+	/**
+	 * 抜粋をトリム
+	 *
+	 * @param string $excerpt 抜粋
+	 * @param int    $length 文字数
+	 * @return string トリムされた抜粋
+	 */
+	private static function trim_excerpt( $excerpt, $length ) {
+		$excerpt = wp_strip_all_tags( $excerpt );
+		if ( mb_strlen( $excerpt ) > $length ) {
+			$excerpt = mb_substr( $excerpt, 0, $length ) . '...';
+		}
+		return $excerpt;
+	}
+
+	/**
+	 * キャッシュキーの生成
+	 *
+	 * @param array $attributes ブロック属性
+	 * @return string キャッシュキー
+	 */
+	private static function generate_cache_key( $attributes ) {
+		return 'andw_notices_block_' . md5( wp_json_encode( $attributes ) );
+	}
+}

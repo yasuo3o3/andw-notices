@@ -1,0 +1,71 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "andw/notices-list",
+	"version": "0.0.1",
+	"title": "お知らせ一覧",
+	"category": "widgets",
+	"description": "お知らせの一覧を表示するブロックです。",
+	"keywords": ["notices", "news", "announcements", "お知らせ", "ニュース"],
+	"textdomain": "andw-notices",
+	"supports": {
+		"html": false,
+		"align": ["wide", "full"]
+	},
+	"attributes": {
+		"count": {
+			"type": "number",
+			"default": 5
+		},
+		"order": {
+			"type": "string",
+			"default": "desc",
+			"enum": ["asc", "desc"]
+		},
+		"orderby": {
+			"type": "string",
+			"default": "display_date",
+			"enum": ["display_date", "date"]
+		},
+		"includeExternal": {
+			"type": "boolean",
+			"default": true
+		},
+		"includeInternal": {
+			"type": "boolean",
+			"default": true
+		},
+		"showDate": {
+			"type": "boolean",
+			"default": true
+		},
+		"showTitle": {
+			"type": "boolean",
+			"default": true
+		},
+		"showExcerpt": {
+			"type": "boolean",
+			"default": true
+		},
+		"excerptLength": {
+			"type": "number",
+			"default": 100
+		},
+		"forceLinkOverride": {
+			"type": "string",
+			"default": "item",
+			"enum": ["item", "self", "external", "internal", "null"]
+		},
+		"openInNewTab": {
+			"type": "boolean"
+		},
+		"layout": {
+			"type": "string",
+			"default": "list",
+			"enum": ["list", "card"]
+		}
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./editor.css",
+	"style": "file:./style.css"
+}

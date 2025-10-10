@@ -1,0 +1,82 @@
+/* お知らせ一覧ブロックのスタイル */
+.andw-notices {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.andw-notice-item {
+	margin-bottom: 1.5em;
+	padding-bottom: 1.5em;
+	border-bottom: 1px solid #eee;
+}
+
+.andw-notice-item:last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.andw-notice-date {
+	display: block;
+	font-size: 0.9em;
+	color: #666;
+	margin-bottom: 0.5em;
+}
+
+.andw-notice-title {
+	margin: 0 0 0.5em 0;
+	font-size: 1.1em;
+	line-height: 1.4;
+}
+
+.andw-notice-title a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.andw-notice-title a:hover {
+	text-decoration: underline;
+}
+
+.andw-notice-excerpt {
+	margin: 0;
+	color: #555;
+	line-height: 1.6;
+}
+
+/* カードレイアウト */
+.andw-notices-card {
+	display: grid;
+	gap: 1.5em;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.andw-notices-card .andw-notice-item {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	padding: 1.5em;
+	margin-bottom: 0;
+	background: #fff;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: box-shadow 0.2s ease;
+}
+
+.andw-notices-card .andw-notice-item:hover {
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+	.andw-notices-card {
+		grid-template-columns: 1fr;
+	}
+
+	.andw-notice-title {
+		font-size: 1em;
+	}
+
+	.andw-notice-date {
+		font-size: 0.85em;
+	}
+}
