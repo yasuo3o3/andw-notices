@@ -24,7 +24,11 @@ class ANDW_Notices_Post_Type {
 	 * 初期化
 	 */
 	public static function init() {
-		add_action( 'init', array( __CLASS__, 'register_post_type' ) );
+		if ( did_action( 'init' ) ) {
+			self::register_post_type();
+		} else {
+			add_action( 'init', array( __CLASS__, 'register_post_type' ) );
+		}
 	}
 
 	/**
