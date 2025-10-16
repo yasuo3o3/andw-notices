@@ -28,6 +28,7 @@ class ANDW_Notices_Meta_Fields {
 		add_action( 'save_post', array( __CLASS__, 'save_meta_fields' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_admin_scripts' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_scripts' ) );
+		add_action( 'init', array( __CLASS__, 'register_meta_fields' ) );
 	}
 
 	/**
@@ -320,5 +321,55 @@ class ANDW_Notices_Meta_Fields {
 		}
 
 		return $url;
+	}
+
+	/**
+	 * メタフィールドをREST APIで利用可能にするため登録
+	 */
+	public static function register_meta_fields() {
+		// 表示日メタフィールド
+		register_meta( 'post', 'andw_notices_display_date', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => 'sanitize_text_field',
+		) );
+
+		// リンクタイプメタフィールド
+		register_meta( 'post', 'andw_notices_link_type', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => 'sanitize_text_field',
+		) );
+
+		// 外部URLメタフィールド
+		register_meta( 'post', 'andw_notices_external_url', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'string',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => array( __CLASS__, 'sanitize_external_url' ),
+		) );
+
+		// 内部投稿IDメタフィールド
+		register_meta( 'post', 'andw_notices_target_post_id', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'integer',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => 'absint',
+		) );
+
+		// 新規タブ設定メタフィールド
+		register_meta( 'post', 'andw_notices_target_blank', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'boolean',
+			'single'            => true,
+			'show_in_rest'      => true,
+			'sanitize_callback' => 'rest_sanitize_boolean',
+		) );
 	}
 }
