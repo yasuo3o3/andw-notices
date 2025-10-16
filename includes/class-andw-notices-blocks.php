@@ -76,16 +76,19 @@ class ANDW_Notices_Blocks {
 	 * フロントエンドアセットの読み込み
 	 */
 	public static function enqueue_frontend_assets() {
-		$frontend_css_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/style-index.css';
+		// ブロックが使用されているページでのみCSSを読み込み
+		if ( ! is_admin() && has_block( 'andw/notices-list' ) ) {
+			$frontend_css_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/style-index.css';
 
-		// フロントエンド用CSSの読み込み
-		if ( file_exists( $frontend_css_file ) ) {
-			wp_enqueue_style(
-				'andw-notices-blocks-style',
-				ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/style-index.css',
-				array(),
-				filemtime( $frontend_css_file )
-			);
+			// フロントエンド用CSSの読み込み
+			if ( file_exists( $frontend_css_file ) ) {
+				wp_enqueue_style(
+					'andw-notices-blocks-style',
+					ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/style-index.css',
+					array(),
+					filemtime( $frontend_css_file )
+				);
+			}
 		}
 	}
 
@@ -98,6 +101,12 @@ class ANDW_Notices_Blocks {
 	 * @return string レンダリング結果
 	 */
 	public static function render_notices_list_block( $attributes, $content, $block ) {
+		// デバッグ: フロントエンド表示確認
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'ANDW Notices Debug: render_notices_list_block called on frontend' );
+			error_log( 'ANDW Notices Debug: is_admin = ' . ( is_admin() ? 'true' : 'false' ) );
+		}
+
 		// デフォルト属性
 		$default_attributes = array(
 			'count'             => 5,
@@ -150,6 +159,19 @@ class ANDW_Notices_Blocks {
 
 		// デバッグ情報を先頭に追加
 		$html = $debug_info . $html;
+
+		// フロントエンドでCSSが読み込まれていない場合の強制読み込み
+		if ( ! is_admin() && ! wp_style_is( 'andw-notices-blocks-style', 'enqueued' ) ) {
+			$frontend_css_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/style-index.css';
+			if ( file_exists( $frontend_css_file ) ) {
+				wp_enqueue_style(
+					'andw-notices-blocks-style',
+					ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/style-index.css',
+					array(),
+					filemtime( $frontend_css_file )
+				);
+			}
+		}
 
 		// キャッシュに保存
 		wp_cache_set( $cache_key, $html, 'andw_notices_blocks', HOUR_IN_SECONDS );
