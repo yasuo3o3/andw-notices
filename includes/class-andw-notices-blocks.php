@@ -22,18 +22,36 @@ class ANDW_Notices_Blocks {
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_editor_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_frontend_assets' ) );
+		add_action( 'wp_loaded', array( __CLASS__, 'debug_registered_blocks' ) );
 	}
 
 	/**
 	 * ブロックの登録
 	 */
 	public static function register_blocks() {
-		register_block_type(
-			ANDW_NOTICES_PLUGIN_DIR . 'blocks/notices-list/block.json',
+		// 【CRITICAL】ブロック登録デバッグ
+		error_log( '=== ANDW Notices BLOCK REGISTRATION START ===' );
+
+		$block_json_path = ANDW_NOTICES_PLUGIN_DIR . 'blocks/notices-list/block.json';
+		error_log( 'ANDW Notices: block.json path = ' . $block_json_path );
+		error_log( 'ANDW Notices: block.json exists = ' . ( file_exists( $block_json_path ) ? 'YES' : 'NO' ) );
+
+		if ( file_exists( $block_json_path ) ) {
+			error_log( 'ANDW Notices: block.json filesize = ' . filesize( $block_json_path ) . ' bytes' );
+		}
+
+		$result = register_block_type(
+			$block_json_path,
 			array(
 				'render_callback' => array( __CLASS__, 'render_notices_list_block' ),
 			)
 		);
+
+		error_log( 'ANDW Notices: register_block_type result = ' . ( $result ? 'SUCCESS' : 'FAILED' ) );
+		if ( $result ) {
+			error_log( 'ANDW Notices: registered block name = ' . $result->name );
+		}
+		error_log( '=== ANDW Notices BLOCK REGISTRATION END ===' );
 	}
 
 	/**
@@ -101,13 +119,26 @@ class ANDW_Notices_Blocks {
 	 * @return string レンダリング結果
 	 */
 	public static function render_notices_list_block( $attributes, $content, $block ) {
-		// デバッグ: フロントエンド表示確認
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'ANDW Notices Debug: render_notices_list_block called on frontend' );
-			error_log( 'ANDW Notices Debug: is_admin = ' . ( is_admin() ? 'true' : 'false' ) );
-		}
+		// 【CRITICAL】無条件デバッグ: render_callback実行確認
+		error_log( '=== ANDW Notices CRITICAL DEBUG START ===' );
+		error_log( 'ANDW Notices: render_notices_list_block called!' );
+		error_log( 'ANDW Notices: is_admin = ' . ( is_admin() ? 'true' : 'false' ) );
+		error_log( 'ANDW Notices: PHP version = ' . PHP_VERSION );
+		error_log( 'ANDW Notices: WordPress version = ' . get_bloginfo( 'version' ) );
+		error_log( '=== ANDW Notices CRITICAL DEBUG END ===' );
 
-		// デフォルト属性
+		// 【緊急テスト】シンプルHTML返却テスト
+		$test_html = '<div style="border:2px solid red; padding:10px; background:#fffacd;">';
+		$test_html .= '<h3 style="color:red; margin:0;">🔴 ANDW Notices ブロック動作テスト</h3>';
+		$test_html .= '<p style="margin:5px 0;">render_callback が正常に実行されています！</p>';
+		$test_html .= '<p style="margin:5px 0; font-size:12px;">管理画面: ' . ( is_admin() ? 'YES' : 'NO' ) . '</p>';
+		$test_html .= '<p style="margin:5px 0; font-size:12px;">実行時刻: ' . current_time( 'Y-m-d H:i:s' ) . '</p>';
+		$test_html .= '</div>';
+
+		error_log( 'ANDW Notices: Returning test HTML: ' . $test_html );
+		return $test_html;
+
+		// デフォルト属性（一時的にコメントアウト）
 		$default_attributes = array(
 			'count'             => 5,
 			'order'             => 'desc',
@@ -414,5 +445,34 @@ class ANDW_Notices_Blocks {
 	 */
 	private static function generate_cache_key( $attributes ) {
 		return 'andw_notices_block_' . md5( wp_json_encode( $attributes ) );
+	}
+
+	/**
+	 * 登録済みブロック確認デバッグ
+	 */
+	public static function debug_registered_blocks() {
+		error_log( '=== ANDW Notices REGISTERED BLOCKS DEBUG START ===' );
+
+		// WP_Block_Type_Registry から登録済みブロック一覧取得
+		$registry = WP_Block_Type_Registry::get_instance();
+		$all_blocks = $registry->get_all_registered();
+
+		error_log( 'ANDW Notices: Total registered blocks = ' . count( $all_blocks ) );
+
+		// andw/ プレフィックスのブロックをチェック
+		$andw_blocks = array();
+		foreach ( $all_blocks as $block_name => $block_type ) {
+			if ( strpos( $block_name, 'andw/' ) === 0 ) {
+				$andw_blocks[] = $block_name;
+				error_log( 'ANDW Notices: Found andw block = ' . $block_name );
+				error_log( 'ANDW Notices: render_callback = ' . ( $block_type->render_callback ? 'SET' : 'NOT SET' ) );
+			}
+		}
+
+		if ( empty( $andw_blocks ) ) {
+			error_log( 'ANDW Notices: ERROR - No andw/ blocks found!' );
+		}
+
+		error_log( '=== ANDW Notices REGISTERED BLOCKS DEBUG END ===' );
 	}
 }
