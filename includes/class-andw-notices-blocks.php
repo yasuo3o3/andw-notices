@@ -173,21 +173,33 @@ class ANDW_Notices_Blocks {
 
 		// 並び順の設定
 		if ( 'display_date' === $attributes['orderby'] ) {
-			$args['meta_key'] = 'andw_notices_display_date';
-			$args['orderby'] = 'meta_value';
-			$args['meta_query'] = array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'andw_notices_display_date',
-					'compare' => 'EXISTS',
-				),
-				array(
-					'key'     => 'andw_notices_display_date',
-					'compare' => 'NOT EXISTS',
-				),
+			// より安全な並び順設定：display_dateがない場合は投稿日でフォールバック
+			$args['orderby'] = array(
+				'meta_value' => 'DESC',
+				'date'       => 'DESC',
 			);
+			$args['meta_key'] = 'andw_notices_display_date';
+			$args['meta_type'] = 'DATE';
 		} else {
 			$args['orderby'] = 'date';
+		}
+
+		// デバッグ情報（開発時のみ）
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'ANDW Notices Debug: WP_Query args: ' . print_r( $args, true ) );
+
+			// 簡単なクエリでnotices投稿タイプの投稿数を確認
+			$simple_query = new WP_Query( array(
+				'post_type'      => 'notices',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+			) );
+			error_log( 'ANDW Notices Debug: 総notices投稿数: ' . $simple_query->found_posts );
+
+			// 投稿タイプが正しく登録されているか確認
+			$post_types = get_post_types( array(), 'names' );
+			error_log( 'ANDW Notices Debug: 登録済み投稿タイプ: ' . implode( ', ', $post_types ) );
 		}
 
 		// フィルタリング
@@ -215,6 +227,40 @@ class ANDW_Notices_Blocks {
 		}
 
 		$query = new WP_Query( $args );
+
+		// デバッグ情報（開発時のみ）
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( 'ANDW Notices Debug: クエリ結果: 見つかった投稿数: ' . $query->found_posts );
+			error_log( 'ANDW Notices Debug: 取得した投稿数: ' . count( $query->posts ) );
+			if ( ! empty( $query->posts ) ) {
+				$post_ids = array_map( function( $post ) { return $post->ID; }, $query->posts );
+				error_log( 'ANDW Notices Debug: 投稿ID: ' . implode( ', ', $post_ids ) );
+			}
+		}
+
+		// もし複雑なクエリで結果が空の場合、シンプルなクエリでフォールバック
+		if ( empty( $query->posts ) && ( ! empty( $args['meta_query'] ) || ! empty( $args['meta_key'] ) ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'ANDW Notices Debug: 複雑なクエリで結果が空だったため、シンプルなクエリにフォールバック' );
+			}
+
+			$fallback_args = array(
+				'post_type'      => 'notices',
+				'post_status'    => 'publish',
+				'posts_per_page' => absint( $attributes['count'] ),
+				'orderby'        => 'date',
+				'order'          => strtoupper( $attributes['order'] ),
+			);
+
+			$fallback_query = new WP_Query( $fallback_args );
+
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( 'ANDW Notices Debug: フォールバッククエリ結果: ' . $fallback_query->found_posts . '件' );
+			}
+
+			return $fallback_query->posts;
+		}
+
 		return $query->posts;
 	}
 
