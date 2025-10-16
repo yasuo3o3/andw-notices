@@ -39,14 +39,14 @@ class ANDW_Notices_Blocks {
 	 * エディターアセットの読み込み
 	 */
 	public static function enqueue_editor_assets() {
-		$asset_file = ANDW_NOTICES_PLUGIN_DIR . 'build/index.asset.php';
+		$asset_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/index.asset.php';
 
 		if ( file_exists( $asset_file ) ) {
 			$asset = include $asset_file;
 
 			wp_enqueue_script(
 				'andw-notices-blocks',
-				ANDW_NOTICES_PLUGIN_URL . 'build/index.js',
+				ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/index.js',
 				$asset['dependencies'],
 				$asset['version'],
 				true
