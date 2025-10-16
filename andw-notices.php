@@ -63,9 +63,6 @@ class ANDW_Notices {
 	 * 必要なファイルの読み込み
 	 */
 	private static function include_files() {
-		// 【CRITICAL】ファイル読み込み開始デバッグ
-		error_log( '=== ANDW Notices INCLUDE FILES START ===' );
-
 		$includes = [
 			'includes/class-andw-notices-post-type.php',
 			'includes/class-andw-notices-meta-fields.php',
@@ -77,95 +74,45 @@ class ANDW_Notices {
 
 		foreach ( $includes as $file ) {
 			$file_path = ANDW_NOTICES_PLUGIN_DIR . $file;
-			error_log( 'ANDW Notices: Checking file: ' . $file_path );
-
 			if ( file_exists( $file_path ) ) {
-				error_log( 'ANDW Notices: Loading file: ' . $file );
 				require_once $file_path;
-				error_log( 'ANDW Notices: File loaded successfully: ' . $file );
-
-				// ブロッククラスの場合は特別にクラス存在確認
-				if ( $file === 'includes/class-andw-notices-blocks.php' ) {
-					error_log( 'ANDW Notices: After loading blocks file, class_exists = ' . ( class_exists( 'ANDW_Notices_Blocks' ) ? 'YES' : 'NO' ) );
-				}
-			} else {
-				error_log( 'ANDW Notices: ERROR - File not found: ' . $file_path );
 			}
 		}
-
-		error_log( '=== ANDW Notices INCLUDE FILES END ===' );
 	}
 
 	/**
 	 * 各機能の初期化
 	 */
 	public static function init_features() {
-		// 【CRITICAL】初期化開始デバッグ
-		error_log( '=== ANDW Notices INIT FEATURES START ===' );
-		error_log( 'ANDW Notices: Current action hook: ' . current_action() );
-		error_log( 'ANDW Notices: did_action(init) = ' . did_action( 'init' ) );
-
 		// カスタム投稿タイプの登録
-		error_log( 'ANDW Notices: ANDW_Notices_Post_Type class_exists = ' . ( class_exists( 'ANDW_Notices_Post_Type' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Post_Type' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Post_Type::init()' );
 			ANDW_Notices_Post_Type::init();
-			error_log( 'ANDW Notices: ANDW_Notices_Post_Type::init() completed' );
-		} else {
-			error_log( 'ANDW Notices: ERROR - ANDW_Notices_Post_Type class not found!' );
 		}
 
 		// メタフィールドの初期化
-		error_log( 'ANDW Notices: ANDW_Notices_Meta_Fields class_exists = ' . ( class_exists( 'ANDW_Notices_Meta_Fields' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Meta_Fields' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Meta_Fields::init()' );
 			ANDW_Notices_Meta_Fields::init();
-			error_log( 'ANDW Notices: ANDW_Notices_Meta_Fields::init() completed' );
-		} else {
-			error_log( 'ANDW Notices: ERROR - ANDW_Notices_Meta_Fields class not found!' );
 		}
 
 		// 管理画面カラムのカスタマイズ
-		error_log( 'ANDW Notices: ANDW_Notices_Admin_Columns class_exists = ' . ( class_exists( 'ANDW_Notices_Admin_Columns' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Admin_Columns' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Admin_Columns::init()' );
 			ANDW_Notices_Admin_Columns::init();
-			error_log( 'ANDW Notices: ANDW_Notices_Admin_Columns::init() completed' );
-		} else {
-			error_log( 'ANDW Notices: ERROR - ANDW_Notices_Admin_Columns class not found!' );
 		}
 
 		// ブロックの登録
-		error_log( 'ANDW Notices: ANDW_Notices_Blocks class_exists = ' . ( class_exists( 'ANDW_Notices_Blocks' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Blocks' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Blocks::init()' );
-			try {
-				ANDW_Notices_Blocks::init();
-				error_log( 'ANDW Notices: ANDW_Notices_Blocks::init() completed successfully' );
-			} catch ( Exception $e ) {
-				error_log( 'ANDW Notices: ERROR in ANDW_Notices_Blocks::init() - ' . $e->getMessage() );
-			}
-		} else {
-			error_log( 'ANDW Notices: ERROR - ANDW_Notices_Blocks class not found!' );
+			ANDW_Notices_Blocks::init();
 		}
 
 		// 設定ページの初期化
-		error_log( 'ANDW Notices: ANDW_Notices_Settings class_exists = ' . ( class_exists( 'ANDW_Notices_Settings' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Settings' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Settings::init()' );
 			ANDW_Notices_Settings::init();
-			error_log( 'ANDW Notices: ANDW_Notices_Settings::init() completed' );
 		}
 
 		// キャッシュ機能の初期化
-		error_log( 'ANDW Notices: ANDW_Notices_Cache class_exists = ' . ( class_exists( 'ANDW_Notices_Cache' ) ? 'YES' : 'NO' ) );
 		if ( class_exists( 'ANDW_Notices_Cache' ) ) {
-			error_log( 'ANDW Notices: Calling ANDW_Notices_Cache::init()' );
 			ANDW_Notices_Cache::init();
-			error_log( 'ANDW Notices: ANDW_Notices_Cache::init() completed' );
 		}
-
-		error_log( '=== ANDW Notices INIT FEATURES END ===' );
 	}
 
 	/**
