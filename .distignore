@@ -42,7 +42,6 @@ less/
 *.less
 
 # ビルド成果物
-build/
 dist/
 .cache/
 zips/
