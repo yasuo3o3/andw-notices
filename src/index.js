@@ -3,6 +3,10 @@ import { __ } from '@wordpress/i18n';
 import { megaphone as icon } from '@wordpress/icons';
 import Edit from './edit';
 
+// CSSファイルをインポート
+import '../blocks/notices-list/style.css';
+import '../blocks/notices-list/editor.css';
+
 // ブロックのメタデータをインポート
 import metadata from '../blocks/notices-list/block.json';
 

@@ -21,6 +21,7 @@ class ANDW_Notices_Blocks {
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
 		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_editor_assets' ) );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_frontend_assets' ) );
 	}
 
 	/**
@@ -40,6 +41,7 @@ class ANDW_Notices_Blocks {
 	 */
 	public static function enqueue_editor_assets() {
 		$asset_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/index.asset.php';
+		$editor_css_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/index.css';
 
 		if ( file_exists( $asset_file ) ) {
 			$asset = include $asset_file;
@@ -56,6 +58,33 @@ class ANDW_Notices_Blocks {
 				'andw-notices-blocks',
 				'andw-notices',
 				ANDW_NOTICES_PLUGIN_DIR . 'languages'
+			);
+		}
+
+		// エディター用CSSの読み込み
+		if ( file_exists( $editor_css_file ) ) {
+			wp_enqueue_style(
+				'andw-notices-blocks-editor',
+				ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/index.css',
+				array(),
+				filemtime( $editor_css_file )
+			);
+		}
+	}
+
+	/**
+	 * フロントエンドアセットの読み込み
+	 */
+	public static function enqueue_frontend_assets() {
+		$frontend_css_file = ANDW_NOTICES_PLUGIN_DIR . 'build/blocks/notices-list/style-index.css';
+
+		// フロントエンド用CSSの読み込み
+		if ( file_exists( $frontend_css_file ) ) {
+			wp_enqueue_style(
+				'andw-notices-blocks-style',
+				ANDW_NOTICES_PLUGIN_URL . 'build/blocks/notices-list/style-index.css',
+				array(),
+				filemtime( $frontend_css_file )
 			);
 		}
 	}
@@ -98,14 +127,29 @@ class ANDW_Notices_Blocks {
 		// お知らせの取得
 		$notices = self::get_notices_for_block( $attributes );
 
+		// デバッグ情報（開発時のみ）
+		$debug_info = '';
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			$debug_info = sprintf(
+				'<!-- デバッグ情報: 取得されたお知らせ数: %d, クエリ属性: %s -->',
+				count( $notices ),
+				wp_json_encode( $attributes )
+			);
+		}
+
 		if ( empty( $notices ) ) {
 			$no_content_message = '<p class="andw-notices-no-content">' . esc_html__( 'お知らせが見つかりませんでした。', 'andw-notices' ) . '</p>';
+			// デバッグ情報付きで返す
+			$no_content_message = $debug_info . $no_content_message;
 			wp_cache_set( $cache_key, $no_content_message, 'andw_notices_blocks', HOUR_IN_SECONDS );
 			return $no_content_message;
 		}
 
 		// HTMLの生成
 		$html = self::generate_notices_html( $notices, $attributes );
+
+		// デバッグ情報を先頭に追加
+		$html = $debug_info . $html;
 
 		// キャッシュに保存
 		wp_cache_set( $cache_key, $html, 'andw_notices_blocks', HOUR_IN_SECONDS );
