@@ -29,6 +29,7 @@ class ANDW_Notices_Post_Type {
 		} else {
 			add_action( 'init', array( __CLASS__, 'register_post_type' ) );
 		}
+		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_fields' ) );
 	}
 
 	/**
@@ -186,5 +187,51 @@ class ANDW_Notices_Post_Type {
 		$timestamp = strtotime( $display_date );
 
 		return $timestamp ? gmdate( 'c', $timestamp ) : '';
+	}
+
+	/**
+	 * REST APIフィールドの登録
+	 */
+	public static function register_rest_fields() {
+		// セキュリティチェック - 編集権限のあるユーザーのみ
+		$permission_callback = function() {
+			return current_user_can( 'edit_posts' );
+		};
+
+		// display_dateメタフィールドをREST APIで利用可能にする
+		register_rest_field( self::POST_TYPE, 'andw_display_date', array(
+			'get_callback'    => function( $object ) {
+				return get_post_meta( $object['id'], 'andw_notices_display_date', true );
+			},
+			'update_callback' => function( $value, $object ) {
+				if ( current_user_can( 'edit_post', $object->ID ) ) {
+					return update_post_meta( $object->ID, 'andw_notices_display_date', sanitize_text_field( $value ) );
+				}
+				return false;
+			},
+			'schema'          => array(
+				'description' => __( 'お知らせの表示日', 'andw-notices' ),
+				'type'        => 'string',
+				'context'     => array( 'view', 'edit' ),
+			),
+		) );
+
+		// link_typeメタフィールド
+		register_rest_field( self::POST_TYPE, 'andw_link_type', array(
+			'get_callback'    => function( $object ) {
+				return get_post_meta( $object['id'], 'andw_notices_link_type', true );
+			},
+			'update_callback' => function( $value, $object ) {
+				if ( current_user_can( 'edit_post', $object->ID ) ) {
+					return update_post_meta( $object->ID, 'andw_notices_link_type', sanitize_text_field( $value ) );
+				}
+				return false;
+			},
+			'schema'          => array(
+				'description' => __( 'リンクタイプ', 'andw-notices' ),
+				'type'        => 'string',
+				'context'     => array( 'view', 'edit' ),
+			),
+		) );
 	}
 }

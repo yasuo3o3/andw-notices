@@ -34,14 +34,13 @@ const Edit = ({ attributes, setAttributes }) => {
 
 	const blockProps = useBlockProps();
 
-	// お知らせ投稿を取得
+	// お知らせ投稿を取得（シンプルクエリでREST APIエラー回避）
 	const { records: notices, isResolving } = useEntityRecords('postType', 'notices', {
 		per_page: count,
 		status: 'publish',
 		_embed: true,
 		order,
-		orderby: orderby === 'display_date' ? 'meta_value' : orderby,
-		meta_key: orderby === 'display_date' ? 'andw_notices_display_date' : undefined
+		orderby: 'date' // display_dateはサーバー側で処理
 	});
 
 	// プレビュー用のサンプルデータ（投稿が存在しない場合）
