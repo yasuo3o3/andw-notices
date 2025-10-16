@@ -52,7 +52,7 @@ error_log
 logs/
 
 # ビルド・成果物
-build/
+# build/ - WordPressプラグイン配布用にビルドファイルを含める
 dist/
 /zips/
 temp-extract/
