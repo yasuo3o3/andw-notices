@@ -19,7 +19,15 @@ class ANDW_Notices_Blocks {
 	 * 初期化
 	 */
 	public static function init() {
-		add_action( 'init', array( __CLASS__, 'register_blocks' ) );
+		// 【CRITICAL修正】initフック後の場合は即座にブロック登録
+		if ( did_action( 'init' ) ) {
+			error_log( 'ANDW Notices: init hook already fired, registering blocks immediately' );
+			self::register_blocks();
+		} else {
+			error_log( 'ANDW Notices: init hook not fired yet, hooking register_blocks' );
+			add_action( 'init', array( __CLASS__, 'register_blocks' ) );
+		}
+
 		add_action( 'enqueue_block_editor_assets', array( __CLASS__, 'enqueue_editor_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_frontend_assets' ) );
 		add_action( 'wp_loaded', array( __CLASS__, 'debug_registered_blocks' ) );
