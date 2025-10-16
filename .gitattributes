@@ -7,6 +7,7 @@ package-lock.json export-ignore
 node_modules export-ignore
 debug-tools export-ignore
 docs export-ignore
+zips export-ignore
 .vscode export-ignore
 .history export-ignore
 .claude export-ignore
