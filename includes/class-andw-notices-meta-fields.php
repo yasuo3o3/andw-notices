@@ -448,97 +448,6 @@ class ANDW_Notices_Meta_Fields {
 		?>
 		<table class="form-table">
 			<tr>
-				<th scope="row"><?php esc_html_e( 'イベント日付', 'andw-notices' ); ?></th>
-				<td>
-					<div class="andw_notices_event">
-						<fieldset>
-							<legend class="screen-reader-text"><?php esc_html_e( 'イベント日付の種類', 'andw-notices' ); ?></legend>
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="none" <?php checked( $event_data['type'], 'none' ); ?> />
-								<?php esc_html_e( 'イベント日付なし', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="single" <?php checked( $event_data['type'], 'single' ); ?> />
-								<?php esc_html_e( '単一日付', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="period" <?php checked( $event_data['type'], 'period' ); ?> />
-								<?php esc_html_e( '期間', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="text" <?php checked( $event_data['type'], 'text' ); ?> />
-								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
-							</label>
-						</fieldset>
-
-						<!-- イベントラベル -->
-						<div id="event-label-field" class="event-field" style="margin-top: 15px; display: none;">
-							<label for="andw_notices_event_label">
-								<?php esc_html_e( 'イベントラベル', 'andw-notices' ); ?>
-							</label><br />
-							<input type="text"
-								   id="andw_notices_event_label"
-								   name="andw_notices_event_label"
-								   value="<?php echo esc_attr( $event_data['label'] ); ?>"
-								   placeholder="<?php esc_attr_e( 'オープン日、開催日、など', 'andw-notices' ); ?>"
-								   class="regular-text" />
-							<p class="description">
-								<?php esc_html_e( 'イベント日付の前に表示されるラベル（例：「開催日：」）', 'andw-notices' ); ?>
-							</p>
-						</div>
-
-						<!-- 単一日付フィールド -->
-						<div id="event-single-field" class="event-field" style="margin-top: 15px; display: none;">
-							<label for="andw_notices_event_single_date">
-								<?php esc_html_e( '日付', 'andw-notices' ); ?>
-							</label><br />
-							<input type="text"
-								   id="andw_notices_event_single_date"
-								   name="andw_notices_event_single_date"
-								   value="<?php echo esc_attr( $event_data['single_date'] ); ?>"
-								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
-								   class="regular-text datepicker" />
-						</div>
-
-						<!-- 期間フィールド -->
-						<div id="event-period-field" class="event-field" style="margin-top: 15px; display: none;">
-							<label for="andw_notices_event_start_date">
-								<?php esc_html_e( '開始日', 'andw-notices' ); ?>
-							</label><br />
-							<input type="text"
-								   id="andw_notices_event_start_date"
-								   name="andw_notices_event_start_date"
-								   value="<?php echo esc_attr( $event_data['start_date'] ); ?>"
-								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
-								   class="regular-text datepicker" />
-							<br /><br />
-							<label for="andw_notices_event_end_date">
-								<?php esc_html_e( '終了日', 'andw-notices' ); ?>
-							</label><br />
-							<input type="text"
-								   id="andw_notices_event_end_date"
-								   name="andw_notices_event_end_date"
-								   value="<?php echo esc_attr( $event_data['end_date'] ); ?>"
-								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
-								   class="regular-text datepicker" />
-						</div>
-
-						<!-- 自由記述フィールド -->
-						<div id="event-text-field" class="event-field" style="margin-top: 15px; display: none;">
-							<label for="andw_notices_event_free_text">
-								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
-							</label><br />
-							<input type="text"
-								   id="andw_notices_event_free_text"
-								   name="andw_notices_event_free_text"
-								   value="<?php echo esc_attr( $event_data['free_text'] ); ?>"
-								   placeholder="<?php esc_attr_e( '例：2024年春頃、近日公開、など', 'andw-notices' ); ?>"
-								   class="regular-text" />
-						</div>
-					</div>
-				</td>
-			</tr>
-			<tr>
 				<th scope="row"><?php esc_html_e( 'リンクタイプ', 'andw-notices' ); ?></th>
 				<td>
 					<fieldset>
@@ -635,6 +544,97 @@ class ANDW_Notices_Meta_Fields {
 							   <?php checked( $target_blank, '1' ); ?> />
 						<?php esc_html_e( '新規タブで開く（target="_blank"）', 'andw-notices' ); ?>
 					</label>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><?php esc_html_e( 'イベント日付', 'andw-notices' ); ?></th>
+				<td>
+					<div class="andw_notices_event">
+						<fieldset>
+							<legend class="screen-reader-text"><?php esc_html_e( 'イベント日付の種類', 'andw-notices' ); ?></legend>
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="none" <?php checked( $event_data['type'], 'none' ); ?> />
+								<?php esc_html_e( 'イベント日付なし', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="single" <?php checked( $event_data['type'], 'single' ); ?> />
+								<?php esc_html_e( '単一日付', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="period" <?php checked( $event_data['type'], 'period' ); ?> />
+								<?php esc_html_e( '期間', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="text" <?php checked( $event_data['type'], 'text' ); ?> />
+								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
+							</label>
+						</fieldset>
+
+						<!-- イベントラベル -->
+						<div id="event-label-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_label">
+								<?php esc_html_e( 'イベントラベル', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_label"
+								   name="andw_notices_event_label"
+								   value="<?php echo esc_attr( $event_data['label'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'オープン日、開催日、など', 'andw-notices' ); ?>"
+								   class="regular-text" />
+							<p class="description">
+								<?php esc_html_e( 'イベント日付の前に表示されるラベル（例：「開催日：」）', 'andw-notices' ); ?>
+							</p>
+						</div>
+
+						<!-- 単一日付フィールド -->
+						<div id="event-single-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_single_date">
+								<?php esc_html_e( '日付', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_single_date"
+								   name="andw_notices_event_single_date"
+								   value="<?php echo esc_attr( $event_data['single_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+						</div>
+
+						<!-- 期間フィールド -->
+						<div id="event-period-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_start_date">
+								<?php esc_html_e( '開始日', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_start_date"
+								   name="andw_notices_event_start_date"
+								   value="<?php echo esc_attr( $event_data['start_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+							<br /><br />
+							<label for="andw_notices_event_end_date">
+								<?php esc_html_e( '終了日', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_end_date"
+								   name="andw_notices_event_end_date"
+								   value="<?php echo esc_attr( $event_data['end_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+						</div>
+
+						<!-- 自由記述フィールド -->
+						<div id="event-text-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_free_text">
+								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_free_text"
+								   name="andw_notices_event_free_text"
+								   value="<?php echo esc_attr( $event_data['free_text'] ); ?>"
+								   placeholder="<?php esc_attr_e( '例：2024年春頃、近日公開、など', 'andw-notices' ); ?>"
+								   class="regular-text" />
+						</div>
+					</div>
 				</td>
 			</tr>
 		</table>
