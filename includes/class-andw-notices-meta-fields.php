@@ -225,17 +225,24 @@ class ANDW_Notices_Meta_Fields {
 				</th>
 				<td>
 					<?php
-					wp_dropdown_pages(
-						array(
-							'name'              => 'andw_notices_target_post_id',
-							'id'                => 'andw_notices_target_post_id',
-							'selected'          => $target_post_id,
-							'show_option_none'  => __( '投稿・ページを選択', 'andw-notices' ),
-							'option_none_value' => '',
-							'post_type'         => array( 'post', 'page' ),
-						)
-					);
+					// カスタムセレクトボックスを作成（投稿と固定ページの両方を含む）
+					$posts_and_pages = get_posts( array(
+						'post_type'      => array( 'post', 'page' ),
+						'post_status'    => 'publish',
+						'numberposts'    => -1,
+						'orderby'        => 'title',
+						'order'          => 'ASC'
+					) );
 					?>
+					<select name="andw_notices_target_post_id" id="andw_notices_target_post_id">
+						<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
+						<?php foreach ( $posts_and_pages as $post_item ) : ?>
+							<option value="<?php echo esc_attr( $post_item->ID ); ?>" <?php selected( $target_post_id, $post_item->ID ); ?>>
+								<?php echo esc_html( $post_item->post_title ); ?>
+								(<?php echo $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' ); ?>)
+							</option>
+						<?php endforeach; ?>
+					</select>
 					<p class="description">
 						<?php esc_html_e( 'リンク先の投稿または固定ページを選択してください。', 'andw-notices' ); ?>
 					</p>
