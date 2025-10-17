@@ -150,7 +150,7 @@ class ANDW_Notices_Meta_Fields {
 					color: #fff;
 				}
 
-				/* イベント日付フィールド用スタイル */
+				/* イベント日付フィールド用スタイル（管理画面） */
 				.andw_notices_event {
 					border: 1px solid #ddd;
 					padding: 15px;
@@ -164,6 +164,142 @@ class ANDW_Notices_Meta_Fields {
 				.event-field:first-child {
 					border-top: none;
 					padding-top: 0;
+				}
+
+				/* フロントエンド用イベント日付スタイル基盤 */
+				.andw_notices_event {
+					/* CSS変数（カスタマイズ可能） */
+					--layout-gap: 0.5rem;
+					--layout-direction: row;
+					--layout-align: flex-start;
+					--layout-justify: flex-start;
+
+					/* 基本レイアウト */
+					display: flex;
+					gap: var(--layout-gap);
+					align-items: var(--layout-align);
+					justify-content: var(--layout-justify);
+					flex-wrap: nowrap;
+				}
+
+				/* レイアウトタイプ別 */
+				.andw_notices_event[data-layout="horizontal"] {
+					flex-direction: row;
+				}
+
+				.andw_notices_event[data-layout="vertical"] {
+					flex-direction: column;
+				}
+
+				.andw_notices_event[data-layout="grid"] {
+					display: grid;
+					grid-template-columns: auto 1fr;
+					gap: var(--layout-gap);
+				}
+
+				/* 配置（アライメント）別 */
+				.andw_notices_event[data-alignment="start"] {
+					align-items: flex-start;
+				}
+
+				.andw_notices_event[data-alignment="center"] {
+					align-items: center;
+				}
+
+				.andw_notices_event[data-alignment="end"] {
+					align-items: flex-end;
+				}
+
+				/* スタイル別プリセット */
+				.andw_notices_event.compact {
+					font-size: 0.875rem;
+					gap: 0.25rem;
+				}
+
+				.andw_notices_event.badge {
+					display: inline-flex;
+					padding: 0.25rem 0.5rem;
+					background-color: #f0f0f0;
+					border-radius: 0.25rem;
+					font-size: 0.8rem;
+					gap: 0.125rem;
+				}
+
+				.andw_notices_event.card {
+					flex-direction: column;
+					padding: 1rem;
+					border: 1px solid #e0e0e0;
+					border-radius: 0.5rem;
+					background-color: #fff;
+					box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+				}
+
+				.andw_notices_event.timeline {
+					position: relative;
+					padding-left: 2rem;
+				}
+
+				.andw_notices_event.timeline::before {
+					content: "📅";
+					position: absolute;
+					left: 0;
+					top: 0;
+				}
+
+				.andw_notices_event.minimal {
+					gap: 0;
+				}
+
+				/* コンポーネント別スタイル */
+				.andw_notices_event_label {
+					font-weight: 600;
+					color: #666;
+				}
+
+				.andw_notices_event_date {
+					color: #333;
+				}
+
+				.andw_notices_event_date time {
+					font-family: inherit;
+				}
+
+				/* 優先順位別 */
+				.andw_notices_event[data-priority="date-first"] [data-component="date"] {
+					order: 1;
+				}
+
+				.andw_notices_event[data-priority="date-first"] [data-component="label"] {
+					order: 2;
+				}
+
+				.andw_notices_event[data-priority="label-first"] [data-component="label"] {
+					order: 1;
+				}
+
+				.andw_notices_event[data-priority="label-first"] [data-component="date"] {
+					order: 2;
+				}
+
+				/* イベントタイプ別カスタマイズ */
+				.andw_notices_event[data-type="period"] .andw_notices_event_date {
+					white-space: nowrap;
+				}
+
+				.andw_notices_event[data-type="text"] .andw_notices_event_date {
+					font-style: italic;
+				}
+
+				/* レスポンシブ対応 */
+				@media (max-width: 768px) {
+					.andw_notices_event[data-layout="horizontal"] {
+						flex-direction: column;
+						align-items: flex-start;
+					}
+
+					.andw_notices_event.timeline {
+						padding-left: 1.5rem;
+					}
 				}
 			' );
 

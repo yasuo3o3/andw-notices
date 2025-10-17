@@ -230,15 +230,41 @@ class ANDW_Notices_Post_Type {
 
 		// デフォルトオプション
 		$default_options = array(
+			// 基本設定
 			'container_class' => 'andw_notices_event',
 			'label_class'     => 'andw_notices_event_label',
 			'date_class'      => 'andw_notices_event_date',
 			'separator'       => '：',
 			'date_format'     => get_option( 'date_format' ),
 			'period_separator' => ' ～ ',
+
+			// レイアウト設定
+			'layout' => array(
+				'type' => 'horizontal', // horizontal|vertical|grid
+				'alignment' => 'start', // start|center|end
+				'gap' => '0.5rem',
+				'wrap' => false,
+			),
+
+			// 表示設定
+			'display' => array(
+				'show_label' => true,
+				'show_icon' => false,
+				'label_position' => 'before', // before|after|above|below
+				'priority' => 'label-first', // label-first|date-first
+			),
+
+			// スタイル設定
+			'style' => 'default', // default|compact|badge|card|timeline
+			'preset' => null, // プリセット名（指定時は他設定を上書き）
 		);
 
 		$options = wp_parse_args( $options, $default_options );
+
+		// プリセット処理
+		if ( ! empty( $options['preset'] ) ) {
+			$options = self::apply_event_preset( $options['preset'], $options );
+		}
 
 		$output = '';
 		$label = '';
@@ -292,15 +318,186 @@ class ANDW_Notices_Post_Type {
 
 		// 出力の組み立て
 		if ( ! empty( $date_content ) ) {
-			$output = '<div class="' . esc_attr( $options['container_class'] ) . '">' .
-					  $label .
-					  '<span class="' . esc_attr( $options['date_class'] ) . '">' .
-					  $date_content .
-					  '</span>' .
+			// ラベル表示制御
+			if ( ! $options['display']['show_label'] ) {
+				$label = '';
+			}
+
+			// データ属性の生成
+			$data_attributes = array(
+				'data-layout' => esc_attr( $options['layout']['type'] ),
+				'data-style' => esc_attr( $options['style'] ),
+				'data-priority' => esc_attr( $options['display']['priority'] ),
+				'data-type' => esc_attr( $event_data['type'] ),
+				'data-alignment' => esc_attr( $options['layout']['alignment'] ),
+			);
+
+			// CSS変数の生成
+			$css_vars = array(
+				'--layout-gap' => esc_attr( $options['layout']['gap'] ),
+			);
+
+			$data_attr_string = '';
+			foreach ( $data_attributes as $attr => $value ) {
+				$data_attr_string .= ' ' . $attr . '="' . $value . '"';
+			}
+
+			$style_attr = '';
+			if ( ! empty( $css_vars ) ) {
+				$style_parts = array();
+				foreach ( $css_vars as $var => $value ) {
+					$style_parts[] = $var . ':' . $value;
+				}
+				$style_attr = ' style="' . esc_attr( implode( ';', $style_parts ) ) . '"';
+			}
+
+			// フィルターでカスタマイズ可能にする
+			$layout_type = apply_filters( 'andw_notices_event_layout', $options['layout']['type'], $event_data, $post_id );
+			$container_class = apply_filters( 'andw_notices_event_container_class', $options['container_class'], $event_data, $post_id );
+
+			// 要素の順序制御
+			$elements = array();
+			if ( 'date-first' === $options['display']['priority'] ) {
+				if ( ! empty( $date_content ) ) {
+					$elements[] = '<span class="' . esc_attr( $options['date_class'] ) . '" data-component="date">' . $date_content . '</span>';
+				}
+				if ( ! empty( $label ) ) {
+					$elements[] = '<span class="' . esc_attr( $options['label_class'] ) . '" data-component="label">' . $label . '</span>';
+				}
+			} else {
+				if ( ! empty( $label ) ) {
+					$elements[] = '<span class="' . esc_attr( $options['label_class'] ) . '" data-component="label">' . $label . '</span>';
+				}
+				if ( ! empty( $date_content ) ) {
+					$elements[] = '<span class="' . esc_attr( $options['date_class'] ) . '" data-component="date">' . $date_content . '</span>';
+				}
+			}
+
+			$output = '<div class="' . esc_attr( $container_class ) . '"' . $data_attr_string . $style_attr . '>' .
+					  implode( '', $elements ) .
 					  '</div>';
 		}
 
-		return $output;
+		return apply_filters( 'andw_notices_event_output', $output, $event_data, $options, $post_id );
+	}
+
+	/**
+	 * イベント表示プリセットの適用
+	 *
+	 * @param string $preset_name プリセット名
+	 * @param array  $options 現在のオプション
+	 * @return array マージされたオプション
+	 */
+	private static function apply_event_preset( $preset_name, $options ) {
+		$presets = self::get_event_presets();
+
+		if ( ! isset( $presets[ $preset_name ] ) ) {
+			return $options;
+		}
+
+		$preset = $presets[ $preset_name ];
+
+		// 深いマージ（再帰的配列マージ）
+		return array_replace_recursive( $options, $preset );
+	}
+
+	/**
+	 * イベント表示プリセットの定義を取得
+	 *
+	 * @return array プリセット定義
+	 */
+	private static function get_event_presets() {
+		$presets = array(
+			'compact' => array(
+				'layout' => array(
+					'type' => 'horizontal',
+					'gap' => '0.25rem',
+					'alignment' => 'center',
+				),
+				'style' => 'compact',
+				'container_class' => 'andw_notices_event compact',
+				'separator' => ' ',
+			),
+
+			'badge' => array(
+				'layout' => array(
+					'type' => 'horizontal',
+					'gap' => '0.125rem',
+					'alignment' => 'center',
+				),
+				'style' => 'badge',
+				'container_class' => 'andw_notices_event badge',
+				'separator' => '',
+				'display' => array(
+					'priority' => 'date-first',
+				),
+			),
+
+			'card' => array(
+				'layout' => array(
+					'type' => 'vertical',
+					'gap' => '0.5rem',
+					'alignment' => 'start',
+				),
+				'style' => 'card',
+				'container_class' => 'andw_notices_event card',
+				'display' => array(
+					'label_position' => 'above',
+				),
+			),
+
+			'timeline' => array(
+				'layout' => array(
+					'type' => 'horizontal',
+					'gap' => '0.75rem',
+					'alignment' => 'center',
+				),
+				'style' => 'timeline',
+				'container_class' => 'andw_notices_event timeline',
+				'display' => array(
+					'show_icon' => true,
+					'priority' => 'date-first',
+				),
+			),
+
+			'minimal' => array(
+				'layout' => array(
+					'type' => 'horizontal',
+					'gap' => '0',
+					'alignment' => 'start',
+				),
+				'style' => 'minimal',
+				'container_class' => 'andw_notices_event minimal',
+				'separator' => '',
+				'display' => array(
+					'show_label' => false,
+				),
+			),
+		);
+
+		// フィルターでカスタムプリセットを追加可能
+		return apply_filters( 'andw_notices_event_presets', $presets );
+	}
+
+	/**
+	 * 利用可能なプリセット一覧を取得（公開API）
+	 *
+	 * @return array プリセット名の配列
+	 */
+	public static function get_available_presets() {
+		$presets = self::get_event_presets();
+		return array_keys( $presets );
+	}
+
+	/**
+	 * プリセットの詳細情報を取得（公開API）
+	 *
+	 * @param string $preset_name プリセット名
+	 * @return array|null プリセット設定
+	 */
+	public static function get_preset_details( $preset_name ) {
+		$presets = self::get_event_presets();
+		return isset( $presets[ $preset_name ] ) ? $presets[ $preset_name ] : null;
 	}
 
 	/**
