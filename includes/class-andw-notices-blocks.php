@@ -123,6 +123,7 @@ class ANDW_Notices_Blocks {
 			'forceLinkOverride' => 'item',
 			'openInNewTab'      => null,
 			'layout'            => 'list',
+			'eventDisplayPreset' => 'default',
 		);
 
 		$attributes = wp_parse_args( $attributes, $default_attributes );
@@ -314,7 +315,8 @@ class ANDW_Notices_Blocks {
 			}
 
 			// イベント日付の表示
-			$event_output = ANDW_Notices_Post_Type::get_notice_event_output( $notice->ID );
+			$event_options = array( 'preset' => $attributes['eventDisplayPreset'] );
+			$event_output = ANDW_Notices_Post_Type::get_notice_event_output( $notice->ID, $event_options );
 			if ( ! empty( $event_output ) ) {
 				$html .= $event_output;
 			}

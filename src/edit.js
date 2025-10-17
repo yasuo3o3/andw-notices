@@ -29,7 +29,8 @@ const Edit = ({ attributes, setAttributes }) => {
 		excerptLength,
 		forceLinkOverride,
 		openInNewTab,
-		layout
+		layout,
+		eventDisplayPreset
 	} = attributes;
 
 	const blockProps = useBlockProps();
@@ -118,6 +119,20 @@ const Edit = ({ attributes, setAttributes }) => {
 							{ label: __('カード', 'andw-notices'), value: 'card' }
 						]}
 						onChange={(value) => setAttributes({ layout: value })}
+					/>
+					<SelectControl
+						label={__('イベント日付表示スタイル', 'andw-notices')}
+						value={eventDisplayPreset}
+						options={[
+							{ label: __('デフォルト', 'andw-notices'), value: 'default' },
+							{ label: __('コンパクト', 'andw-notices'), value: 'compact' },
+							{ label: __('バッジ', 'andw-notices'), value: 'badge' },
+							{ label: __('カード', 'andw-notices'), value: 'card' },
+							{ label: __('タイムライン', 'andw-notices'), value: 'timeline' },
+							{ label: __('ミニマル', 'andw-notices'), value: 'minimal' }
+						]}
+						onChange={(value) => setAttributes({ eventDisplayPreset: value })}
+						help={__('イベント日付の表示スタイルを選択してください', 'andw-notices')}
 					/>
 				</PanelBody>
 

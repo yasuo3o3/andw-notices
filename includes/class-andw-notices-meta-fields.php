@@ -692,7 +692,6 @@ class ANDW_Notices_Meta_Fields {
 		}
 
 		$event_data = get_post_meta( $post->ID, self::META_PREFIX . 'event_data', true );
-		$display_preset = get_post_meta( $post->ID, self::META_PREFIX . 'display_preset', true );
 		$link_type = get_post_meta( $post->ID, self::META_PREFIX . 'link_type', true );
 		$target_post_id = get_post_meta( $post->ID, self::META_PREFIX . 'target_post_id', true );
 		$external_url = get_post_meta( $post->ID, self::META_PREFIX . 'external_url', true );
@@ -708,11 +707,6 @@ class ANDW_Notices_Meta_Fields {
 				'end_date' => '',
 				'free_text' => ''
 			);
-		}
-
-		// 表示プリセットのデフォルト値
-		if ( empty( $display_preset ) ) {
-			$display_preset = 'default';
 		}
 
 		// デフォルト値
@@ -909,46 +903,6 @@ class ANDW_Notices_Meta_Fields {
 								   class="regular-text" />
 						</div>
 
-						<!-- 表示スタイル設定 -->
-						<div id="event-display-settings" class="event-field" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; display: block !important;">
-							<h4 style="margin-top: 0;"><?php esc_html_e( '表示スタイル', 'andw-notices' ); ?></h4>
-							<label for="andw_notices_display_preset">
-								<?php esc_html_e( 'プリセット', 'andw-notices' ); ?>
-							</label><br />
-							<select id="andw_notices_display_preset" name="andw_notices_display_preset" class="regular-text">
-								<option value="default" <?php selected( $display_preset, 'default' ); ?>><?php esc_html_e( '標準', 'andw-notices' ); ?></option>
-								<option value="compact" <?php selected( $display_preset, 'compact' ); ?>><?php esc_html_e( 'コンパクト', 'andw-notices' ); ?></option>
-								<option value="badge" <?php selected( $display_preset, 'badge' ); ?>><?php esc_html_e( 'バッジ', 'andw-notices' ); ?></option>
-								<option value="card" <?php selected( $display_preset, 'card' ); ?>><?php esc_html_e( 'カード', 'andw-notices' ); ?></option>
-								<option value="timeline" <?php selected( $display_preset, 'timeline' ); ?>><?php esc_html_e( 'タイムライン', 'andw-notices' ); ?></option>
-								<option value="minimal" <?php selected( $display_preset, 'minimal' ); ?>><?php esc_html_e( '最小表示', 'andw-notices' ); ?></option>
-							</select>
-							<p class="description">
-								<?php esc_html_e( 'イベント日付の表示スタイルを選択してください。', 'andw-notices' ); ?>
-							</p>
-
-							<!-- プレビューエリア -->
-							<div id="event-preview-container" style="margin-top: 15px;">
-								<h5><?php esc_html_e( 'プレビュー', 'andw-notices' ); ?></h5>
-								<div id="event-preview" style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;">
-									<?php
-									// 初期プレビューの表示
-									if ( ! empty( $event_data ) && 'none' !== $event_data['type'] ) {
-										// 保存されたデータでプレビューを表示
-										echo wp_kses_post( ANDW_Notices_Post_Type::get_notice_event_output(
-											$post->ID,
-											array( 'preset' => $display_preset )
-										) );
-									} else {
-										esc_html_e( 'イベント日付を設定するとプレビューが表示されます', 'andw-notices' );
-									}
-									?>
-								</div>
-								<p class="description">
-									<?php esc_html_e( 'リアルタイムプレビューはJavaScriptが有効な場合に動作します', 'andw-notices' ); ?>
-								</p>
-							</div>
-						</div>
 					</div>
 				</td>
 			</tr>
@@ -1022,13 +976,6 @@ class ANDW_Notices_Meta_Fields {
 
 		update_post_meta( $post_id, self::META_PREFIX . 'event_data', $event_data );
 
-		// 表示プリセットの保存
-		if ( isset( $_POST['andw_notices_display_preset'] ) ) {
-			$display_preset = sanitize_text_field( wp_unslash( $_POST['andw_notices_display_preset'] ) );
-			$display_preset = self::validate_display_preset( $display_preset );
-			update_post_meta( $post_id, self::META_PREFIX . 'display_preset', $display_preset );
-		}
-
 		// リンクタイプの保存
 		if ( isset( $_POST['andw_notices_link_type'] ) ) {
 			$link_type = sanitize_text_field( wp_unslash( $_POST['andw_notices_link_type'] ) );
@@ -1070,16 +1017,6 @@ class ANDW_Notices_Meta_Fields {
 		return in_array( $event_type, $allowed_types, true ) ? $event_type : 'none';
 	}
 
-	/**
-	 * 表示プリセットの検証
-	 *
-	 * @param string $display_preset 表示プリセット
-	 * @return string 検証済み表示プリセット
-	 */
-	private static function validate_display_preset( $display_preset ) {
-		$allowed_presets = array( 'default', 'compact', 'badge', 'card', 'timeline', 'minimal' );
-		return in_array( $display_preset, $allowed_presets, true ) ? $display_preset : 'default';
-	}
 
 	/**
 	 * 日付の検証（Y-m-d形式）
