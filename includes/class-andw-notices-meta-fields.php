@@ -1000,7 +1000,8 @@ class ANDW_Notices_Meta_Fields {
 		}
 
 		// nonce の確認
-		if ( ! isset( $_POST['andw_notices_meta_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['andw_notices_meta_nonce'] ) ), 'andw_notices_meta_nonce' ) ) {
+		$nonce = isset( $_POST['andw_notices_meta_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['andw_notices_meta_nonce'] ) ) : '';
+		if ( ! wp_verify_nonce( $nonce, 'andw_notices_meta_nonce' ) ) {
 			return;
 		}
 

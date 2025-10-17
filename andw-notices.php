@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // プラグインの定数を定義
-define( 'ANDW_NOTICES_VERSION', '0.0.1' );
+define( 'ANDW_NOTICES_VERSION', '0.0.2' );
 define( 'ANDW_NOTICES_PLUGIN_FILE', __FILE__ );
 define( 'ANDW_NOTICES_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ANDW_NOTICES_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -127,8 +127,8 @@ class ANDW_Notices {
 		// 書き換えルールをフラッシュ
 		flush_rewrite_rules();
 
-		// プラグインバージョンを保存
-		update_option( 'andw_notices_version', ANDW_NOTICES_VERSION );
+		// プラグインバージョンを保存（autoload無効）
+		update_option( 'andw_notices_version', ANDW_NOTICES_VERSION, false );
 	}
 
 	/**

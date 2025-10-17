@@ -138,7 +138,8 @@ class ANDW_Notices_Settings {
 	 */
 	public static function render_settings_page() {
 		// nonce の確認とキャッシュクリア処理
-		if ( isset( $_POST['clear_cache'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['andw_notices_clear_cache_nonce'] ) ), 'andw_notices_clear_cache' ) ) {
+		$clear_cache_nonce = isset( $_POST['andw_notices_clear_cache_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['andw_notices_clear_cache_nonce'] ) ) : '';
+		if ( isset( $_POST['clear_cache'] ) && wp_verify_nonce( $clear_cache_nonce, 'andw_notices_clear_cache' ) ) {
 			if ( current_user_can( 'manage_options' ) ) {
 				if ( class_exists( 'ANDW_Notices_Cache' ) ) {
 					ANDW_Notices_Cache::clear_cache();

@@ -37,6 +37,7 @@ function andw_notices_uninstall_cleanup() {
 	// 2. メタデータの削除（念のため、残存メタデータをクリーンアップ）
 	$meta_keys = array(
 		'andw_notices_display_date',
+		'andw_notices_event_data',
 		'andw_notices_link_type',
 		'andw_notices_target_post_id',
 		'andw_notices_external_url',
@@ -55,6 +56,7 @@ function andw_notices_uninstall_cleanup() {
 	// 3. プラグイン設定オプションの削除
 	$options_to_delete = array(
 		'andw_notices_settings',
+		'andw_notices_templates',
 		'andw_notices_version',
 	);
 
