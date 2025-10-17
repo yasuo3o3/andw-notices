@@ -106,9 +106,11 @@ class ANDW_Notices_Post_Type {
 			'post_status'    => 'publish',
 			'posts_per_page' => 5,
 			'orderby'        => 'meta_value',
-			'meta_key'       => 'andw_notices_display_date',
+			// ソート要件のため必要
+			'meta_key'       => 'andw_notices_display_date', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 			'order'          => 'DESC',
-			'meta_query'     => array(
+			// WPコアの仕様上必要である
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				'relation' => 'OR',
 				array(
 					'key'     => 'andw_notices_display_date',

@@ -45,12 +45,7 @@ function andw_notices_uninstall_cleanup() {
 	);
 
 	foreach ( $meta_keys as $meta_key ) {
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->postmeta} WHERE meta_key = %s",
-				$meta_key
-			)
-		);
+		delete_post_meta_by_key( $meta_key );
 	}
 
 	// 3. プラグイン設定オプションの削除
@@ -66,13 +61,10 @@ function andw_notices_uninstall_cleanup() {
 	}
 
 	// 4. Transientキャッシュの削除
-	$wpdb->query(
-		$wpdb->prepare(
-			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-			$wpdb->esc_like( '_transient_andw_notices_' ) . '%',
-			$wpdb->esc_like( '_transient_timeout_andw_notices_' ) . '%'
-		)
-	);
+	$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+	foreach ( $recorded_keys as $cache_key ) {
+		delete_transient( 'andw_notices_' . $cache_key );
+	}
 
 	// 5. オブジェクトキャッシュのクリア（関数存在チェック）
 	if ( function_exists( 'wp_cache_flush_group' ) ) {
