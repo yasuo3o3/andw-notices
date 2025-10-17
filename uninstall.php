@@ -73,8 +73,10 @@ function andw_notices_uninstall_cleanup() {
 		)
 	);
 
-	// 5. オブジェクトキャッシュのクリア
-	wp_cache_flush_group( 'andw_notices_blocks' );
+	// 5. オブジェクトキャッシュのクリア（関数存在チェック）
+	if ( function_exists( 'wp_cache_flush_group' ) ) {
+		wp_cache_flush_group( 'andw_notices_blocks' );
+	}
 
 	// 6. WordPress標準のキャッシュクリア
 	wp_cache_delete( 'alloptions', 'options' );

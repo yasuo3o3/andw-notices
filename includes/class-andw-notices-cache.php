@@ -81,8 +81,23 @@ class ANDW_Notices_Cache {
 	 * すべてのキャッシュをクリア
 	 */
 	public static function clear_cache() {
-		// Object Cache のグループをフラッシュ
-		wp_cache_flush_group( self::CACHE_GROUP );
+		// Object Cache のグループをフラッシュ（関数存在チェック）
+		if ( function_exists( 'wp_cache_flush_group' ) ) {
+			wp_cache_flush_group( self::CACHE_GROUP );
+		} else {
+			// フォールバック: 個別のキャッシュキーを削除
+			$cache_keys = array(
+				'notices_list_',
+				'notices_count_',
+				'notices_meta_'
+			);
+			foreach ( $cache_keys as $key_prefix ) {
+				// 可能な限りのキーパターンを削除
+				for ( $i = 0; $i < 100; $i++ ) {
+					wp_cache_delete( $key_prefix . $i, self::CACHE_GROUP );
+				}
+			}
+		}
 
 		// Transient を検索して削除
 		global $wpdb;

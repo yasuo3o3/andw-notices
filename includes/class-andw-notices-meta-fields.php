@@ -1264,7 +1264,7 @@ class ANDW_Notices_Meta_Fields {
 			'type'              => 'string',
 			'single'            => true,
 			'show_in_rest'      => true,
-			'sanitize_callback' => array( __CLASS__, 'sanitize_external_url' ),
+			'sanitize_callback' => array( __CLASS__, 'validate_external_url' ),
 		) );
 
 		// 内部投稿IDメタフィールド
