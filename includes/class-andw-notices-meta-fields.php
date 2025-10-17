@@ -149,6 +149,22 @@ class ANDW_Notices_Meta_Fields {
 					background-color: #2271b1;
 					color: #fff;
 				}
+
+				/* イベント日付フィールド用スタイル */
+				.andw_notices_event {
+					border: 1px solid #ddd;
+					padding: 15px;
+					background-color: #f9f9f9;
+					border-radius: 4px;
+				}
+				.event-field {
+					padding: 10px 0;
+					border-top: 1px solid #eee;
+				}
+				.event-field:first-child {
+					border-top: none;
+					padding-top: 0;
+				}
 			' );
 
 			wp_add_inline_script(
@@ -158,12 +174,53 @@ class ANDW_Notices_Meta_Fields {
 					// デバッグ用ログ
 					console.log("ANDW Notices: JavaScript初期化開始");
 
-					// Datepicker初期化
-					$("#andw_notices_display_date").datepicker({
+					// Datepicker初期化（イベント日付フィールド用）
+					$(".datepicker").datepicker({
 						dateFormat: "yy-mm-dd",
 						changeMonth: true,
 						changeYear: true
 					});
+
+					// イベント日付タイプ選択の処理
+					function toggleEventFields() {
+						var $selectedRadio = $("input[name=\"andw_notices_event_type\"]:checked");
+						var eventType = $selectedRadio.val();
+
+						console.log("ANDW Notices: イベントタイプ変更:", eventType);
+
+						// すべてのイベントフィールドを非表示
+						$(".event-field").hide();
+
+						// 選択されたタイプに応じてフィールドを表示
+						if (eventType && eventType !== "none") {
+							// イベントラベルは全タイプで表示
+							$("#event-label-field").show();
+
+							// タイプ別のフィールドを表示
+							if (eventType === "single") {
+								$("#event-single-field").show();
+								// datepickerの再初期化
+								$("#andw_notices_event_single_date").datepicker({
+									dateFormat: "yy-mm-dd",
+									changeMonth: true,
+									changeYear: true
+								});
+							} else if (eventType === "period") {
+								$("#event-period-field").show();
+								// datepickerの再初期化
+								$("#andw_notices_event_start_date, #andw_notices_event_end_date").datepicker({
+									dateFormat: "yy-mm-dd",
+									changeMonth: true,
+									changeYear: true
+								});
+							} else if (eventType === "text") {
+								$("#event-text-field").show();
+							}
+						}
+					}
+
+					// イベントタイプラジオボタンの変更イベント
+					$("input[name=\"andw_notices_event_type\"]").on("change", toggleEventFields);
 
 					// リンクタイプ選択の処理
 					function toggleLinkTypeFields() {
@@ -297,6 +354,7 @@ class ANDW_Notices_Meta_Fields {
 
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
+						toggleEventFields();
 						toggleLinkTypeFields();
 
 						// Select2初期化（internal選択時のみ）
@@ -340,11 +398,23 @@ class ANDW_Notices_Meta_Fields {
 	public static function render_meta_box( $post ) {
 		wp_nonce_field( 'andw_notices_meta_nonce', 'andw_notices_meta_nonce' );
 
-		$display_date = get_post_meta( $post->ID, self::META_PREFIX . 'display_date', true );
+		$event_data = get_post_meta( $post->ID, self::META_PREFIX . 'event_data', true );
 		$link_type = get_post_meta( $post->ID, self::META_PREFIX . 'link_type', true );
 		$target_post_id = get_post_meta( $post->ID, self::META_PREFIX . 'target_post_id', true );
 		$external_url = get_post_meta( $post->ID, self::META_PREFIX . 'external_url', true );
 		$target_blank = get_post_meta( $post->ID, self::META_PREFIX . 'target_blank', true );
+
+		// イベントデータの初期化（JSON形式）
+		if ( empty( $event_data ) || ! is_array( $event_data ) ) {
+			$event_data = array(
+				'type' => 'none',
+				'label' => '',
+				'single_date' => '',
+				'start_date' => '',
+				'end_date' => '',
+				'free_text' => ''
+			);
+		}
 
 		// デフォルト値
 		if ( empty( $link_type ) ) {
@@ -353,19 +423,94 @@ class ANDW_Notices_Meta_Fields {
 		?>
 		<table class="form-table">
 			<tr>
-				<th scope="row">
-					<label for="andw_notices_display_date"><?php esc_html_e( '表示日', 'andw-notices' ); ?></label>
-				</th>
+				<th scope="row"><?php esc_html_e( 'イベント日付', 'andw-notices' ); ?></th>
 				<td>
-					<input type="text"
-						   id="andw_notices_display_date"
-						   name="andw_notices_display_date"
-						   value="<?php echo esc_attr( $display_date ); ?>"
-						   placeholder="<?php esc_attr_e( 'YYYY-MM-DD または YYYY-MM-DD HH:MM:SS', 'andw-notices' ); ?>"
-						   class="regular-text" />
-					<p class="description">
-						<?php esc_html_e( '未設定の場合は公開日が使用されます。', 'andw-notices' ); ?>
-					</p>
+					<div class="andw_notices_event">
+						<fieldset>
+							<legend class="screen-reader-text"><?php esc_html_e( 'イベント日付の種類', 'andw-notices' ); ?></legend>
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="none" <?php checked( $event_data['type'], 'none' ); ?> />
+								<?php esc_html_e( 'イベント日付なし', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="single" <?php checked( $event_data['type'], 'single' ); ?> />
+								<?php esc_html_e( '単一日付', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="period" <?php checked( $event_data['type'], 'period' ); ?> />
+								<?php esc_html_e( '期間', 'andw-notices' ); ?>
+							</label><br />
+							<label>
+								<input type="radio" name="andw_notices_event_type" value="text" <?php checked( $event_data['type'], 'text' ); ?> />
+								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
+							</label>
+						</fieldset>
+
+						<!-- イベントラベル -->
+						<div id="event-label-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_label">
+								<?php esc_html_e( 'イベントラベル', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_label"
+								   name="andw_notices_event_label"
+								   value="<?php echo esc_attr( $event_data['label'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'オープン日、開催日、など', 'andw-notices' ); ?>"
+								   class="regular-text" />
+							<p class="description">
+								<?php esc_html_e( 'イベント日付の前に表示されるラベル（例：「開催日：」）', 'andw-notices' ); ?>
+							</p>
+						</div>
+
+						<!-- 単一日付フィールド -->
+						<div id="event-single-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_single_date">
+								<?php esc_html_e( '日付', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_single_date"
+								   name="andw_notices_event_single_date"
+								   value="<?php echo esc_attr( $event_data['single_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+						</div>
+
+						<!-- 期間フィールド -->
+						<div id="event-period-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_start_date">
+								<?php esc_html_e( '開始日', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_start_date"
+								   name="andw_notices_event_start_date"
+								   value="<?php echo esc_attr( $event_data['start_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+							<br /><br />
+							<label for="andw_notices_event_end_date">
+								<?php esc_html_e( '終了日', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_end_date"
+								   name="andw_notices_event_end_date"
+								   value="<?php echo esc_attr( $event_data['end_date'] ); ?>"
+								   placeholder="<?php esc_attr_e( 'YYYY-MM-DD', 'andw-notices' ); ?>"
+								   class="regular-text datepicker" />
+						</div>
+
+						<!-- 自由記述フィールド -->
+						<div id="event-text-field" class="event-field" style="margin-top: 15px; display: none;">
+							<label for="andw_notices_event_free_text">
+								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
+							</label><br />
+							<input type="text"
+								   id="andw_notices_event_free_text"
+								   name="andw_notices_event_free_text"
+								   value="<?php echo esc_attr( $event_data['free_text'] ); ?>"
+								   placeholder="<?php esc_attr_e( '例：2024年春頃、近日公開、など', 'andw-notices' ); ?>"
+								   class="regular-text" />
+						</div>
+					</div>
 				</td>
 			</tr>
 			<tr>
@@ -496,12 +641,45 @@ class ANDW_Notices_Meta_Fields {
 			return;
 		}
 
-		// 表示日の保存
-		if ( isset( $_POST['andw_notices_display_date'] ) ) {
-			$display_date = sanitize_text_field( wp_unslash( $_POST['andw_notices_display_date'] ) );
-			$display_date = self::validate_datetime( $display_date );
-			update_post_meta( $post_id, self::META_PREFIX . 'display_date', $display_date );
+		// イベントデータの保存
+		$event_data = array(
+			'type' => 'none',
+			'label' => '',
+			'single_date' => '',
+			'start_date' => '',
+			'end_date' => '',
+			'free_text' => ''
+		);
+
+		if ( isset( $_POST['andw_notices_event_type'] ) ) {
+			$event_type = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_type'] ) );
+			$event_type = self::validate_event_type( $event_type );
+			$event_data['type'] = $event_type;
+
+			// イベントラベルの保存
+			if ( isset( $_POST['andw_notices_event_label'] ) ) {
+				$event_data['label'] = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_label'] ) );
+			}
+
+			// タイプ別のデータ保存
+			if ( $event_type === 'single' && isset( $_POST['andw_notices_event_single_date'] ) ) {
+				$single_date = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_single_date'] ) );
+				$event_data['single_date'] = self::validate_date( $single_date );
+			} elseif ( $event_type === 'period' ) {
+				if ( isset( $_POST['andw_notices_event_start_date'] ) ) {
+					$start_date = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_start_date'] ) );
+					$event_data['start_date'] = self::validate_date( $start_date );
+				}
+				if ( isset( $_POST['andw_notices_event_end_date'] ) ) {
+					$end_date = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_end_date'] ) );
+					$event_data['end_date'] = self::validate_date( $end_date );
+				}
+			} elseif ( $event_type === 'text' && isset( $_POST['andw_notices_event_free_text'] ) ) {
+				$event_data['free_text'] = sanitize_text_field( wp_unslash( $_POST['andw_notices_event_free_text'] ) );
+			}
 		}
+
+		update_post_meta( $post_id, self::META_PREFIX . 'event_data', $event_data );
 
 		// リンクタイプの保存
 		if ( isset( $_POST['andw_notices_link_type'] ) ) {
@@ -534,7 +712,40 @@ class ANDW_Notices_Meta_Fields {
 	}
 
 	/**
-	 * 日時の検証
+	 * イベントタイプの検証
+	 *
+	 * @param string $event_type イベントタイプ
+	 * @return string 検証済みイベントタイプ
+	 */
+	private static function validate_event_type( $event_type ) {
+		$allowed_types = array( 'none', 'single', 'period', 'text' );
+		return in_array( $event_type, $allowed_types, true ) ? $event_type : 'none';
+	}
+
+	/**
+	 * 日付の検証（Y-m-d形式）
+	 *
+	 * @param string $date 日付文字列
+	 * @return string 検証済み日付文字列
+	 */
+	private static function validate_date( $date ) {
+		if ( empty( $date ) ) {
+			return '';
+		}
+
+		// Y-m-d 形式の検証
+		if ( preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) ) {
+			$timestamp = strtotime( $date );
+			if ( $timestamp !== false ) {
+				return $date;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * 日時の検証（従来の関数、下位互換のため保持）
 	 *
 	 * @param string $datetime 日時文字列
 	 * @return string 検証済み日時文字列
@@ -605,10 +816,61 @@ class ANDW_Notices_Meta_Fields {
 	}
 
 	/**
+	 * イベントデータのサニタイゼーション
+	 *
+	 * @param array $event_data イベントデータ配列
+	 * @return array サニタイズされたイベントデータ
+	 */
+	public static function sanitize_event_data( $event_data ) {
+		if ( ! is_array( $event_data ) ) {
+			return array(
+				'type' => 'none',
+				'label' => '',
+				'single_date' => '',
+				'start_date' => '',
+				'end_date' => '',
+				'free_text' => ''
+			);
+		}
+
+		$sanitized = array(
+			'type' => self::validate_event_type( $event_data['type'] ?? 'none' ),
+			'label' => sanitize_text_field( $event_data['label'] ?? '' ),
+			'single_date' => self::validate_date( $event_data['single_date'] ?? '' ),
+			'start_date' => self::validate_date( $event_data['start_date'] ?? '' ),
+			'end_date' => self::validate_date( $event_data['end_date'] ?? '' ),
+			'free_text' => sanitize_text_field( $event_data['free_text'] ?? '' ),
+		);
+
+		return $sanitized;
+	}
+
+	/**
 	 * メタフィールドをREST APIで利用可能にするため登録
 	 */
 	public static function register_meta_fields() {
-		// 表示日メタフィールド
+		// イベントデータメタフィールド（新規）
+		register_meta( 'post', 'andw_notices_event_data', array(
+			'object_subtype'    => 'notices',
+			'type'              => 'object',
+			'single'            => true,
+			'show_in_rest'      => array(
+				'schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'type'        => array( 'type' => 'string' ),
+						'label'       => array( 'type' => 'string' ),
+						'single_date' => array( 'type' => 'string' ),
+						'start_date'  => array( 'type' => 'string' ),
+						'end_date'    => array( 'type' => 'string' ),
+						'free_text'   => array( 'type' => 'string' ),
+					),
+				),
+			),
+			'sanitize_callback' => array( __CLASS__, 'sanitize_event_data' ),
+		) );
+
+		// 表示日メタフィールド（下位互換のため保持）
 		register_meta( 'post', 'andw_notices_display_date', array(
 			'object_subtype'    => 'notices',
 			'type'              => 'string',
