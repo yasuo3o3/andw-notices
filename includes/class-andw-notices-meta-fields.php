@@ -225,15 +225,22 @@ class ANDW_Notices_Meta_Fields {
 						console.log("ANDW Notices: Select2初期化開始");
 
 						// Select2の利用可能性をチェック
-						if (typeof $.fn.select2 === "undefined") {
-							console.warn("ANDW Notices: Select2が利用できません。通常のセレクトボックスとして動作します。");
+						if (typeof $ === "undefined" || typeof $.fn === "undefined" || typeof $.fn.select2 === "undefined") {
+							console.warn("ANDW Notices: Select2またはjQueryが利用できません。通常のセレクトボックスとして動作します。");
 							return;
 						}
 
 						var $select = $("#andw_notices_target_post_id");
 
-						// Select2で初期化
-						$select.select2({
+						// 要素の存在確認
+						if ($select.length === 0) {
+							console.warn("ANDW Notices: セレクトボックス要素が見つかりません。");
+							return;
+						}
+
+						// Select2で初期化（エラーハンドリング付き）
+						try {
+							$select.select2({
 							placeholder: "投稿・ページを選択または検索...",
 							allowClear: true,
 							width: "100%",
@@ -252,6 +259,7 @@ class ANDW_Notices_Meta_Fields {
 									return "読み込み中...";
 								}
 							},
+							// 安全なmatcher関数（シンプル版）
 							matcher: function(params, data) {
 								// 検索語が空の場合は全て表示
 								if ($.trim(params.term) === "") {
@@ -264,19 +272,8 @@ class ANDW_Notices_Meta_Fields {
 								// オプションのテキストを取得
 								var text = (data.text || "").toLowerCase();
 
-								// data属性からも検索
-								var $option = $("option[value=\"" + data.id + "\"]", $select);
-								var postTitle = ($option.data("post-title") || "").toLowerCase();
-								var postSlug = ($option.data("post-slug") || "").toLowerCase();
-								var postType = ($option.data("post-type") || "").toLowerCase();
-								var searchText = ($option.data("search-text") || "").toLowerCase();
-
-								// いずれかにマッチするかチェック
-								if (text.indexOf(term) > -1 ||
-									postTitle.indexOf(term) > -1 ||
-									postSlug.indexOf(term) > -1 ||
-									postType.indexOf(term) > -1 ||
-									searchText.indexOf(term) > -1) {
+								// テキストにマッチするかチェック
+								if (text.indexOf(term) > -1) {
 									return data;
 								}
 
@@ -291,6 +288,11 @@ class ANDW_Notices_Meta_Fields {
 						});
 
 						console.log("ANDW Notices: Select2初期化完了");
+
+						} catch (error) {
+							console.error("ANDW Notices: Select2初期化エラー:", error);
+							console.warn("ANDW Notices: 通常のセレクトボックスとして動作します。");
+						}
 					}
 
 					// 初期表示（少し遅延させて確実に実行）
@@ -309,10 +311,14 @@ class ANDW_Notices_Meta_Fields {
 					$("input[name=\"andw_notices_link_type\"]").on("change", function() {
 						var linkType = $(this).val();
 
-						// 既存のSelect2を破棄
+						// 既存のSelect2を破棄（エラーハンドリング付き）
 						var $select = $("#andw_notices_target_post_id");
-						if ($select.hasClass("select2-hidden-accessible")) {
-							$select.select2("destroy");
+						if ($select.length > 0 && $select.hasClass("select2-hidden-accessible")) {
+							try {
+								$select.select2("destroy");
+							} catch (error) {
+								console.warn("ANDW Notices: Select2破棄時にエラー:", error);
+							}
 						}
 
 						// internalタイプの場合のみSelect2初期化
