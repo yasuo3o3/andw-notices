@@ -187,7 +187,7 @@ class ANDW_Notices_Meta_Fields {
 							},
 							matcher: function(params, data) {
 								// 検索語が空の場合は全て表示
-								if ($.trim(params.term) === '') {
+								if ($.trim(params.term) === "") {
 									return data;
 								}
 
@@ -195,12 +195,12 @@ class ANDW_Notices_Meta_Fields {
 								var term = params.term.toLowerCase();
 
 								// テキスト内容を取得
-								var text = (data.text || '').toLowerCase();
+								var text = (data.text || "").toLowerCase();
 
 								// data-slug と data-type も検索対象に含める
-								var $option = $("#andw_notices_target_post_id option[value='" + data.id + "']");
-								var slug = ($option.attr('data-slug') || '').toLowerCase();
-								var type = ($option.attr('data-type') || '').toLowerCase();
+								var $option = $("#andw_notices_target_post_id option[value=\"" + data.id + "\"]");
+								var slug = ($option.attr("data-slug") || "").toLowerCase();
+								var type = ($option.attr("data-type") || "").toLowerCase();
 
 								// タイトル、スラッグ、投稿タイプのいずれかにマッチするかチェック
 								if (text.indexOf(term) > -1 ||
