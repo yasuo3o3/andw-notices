@@ -59,6 +59,16 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
 
+			// CSS for meta box styling
+			wp_add_inline_style( 'jquery-ui-datepicker', '
+				.link-type-field {
+					display: none !important;
+				}
+				.link-type-field.show {
+					display: table-row !important;
+				}
+			' );
+
 			wp_add_inline_script(
 				'jquery-ui-datepicker',
 				'
@@ -81,13 +91,24 @@ class ANDW_Notices_Meta_Fields {
 						console.log("ANDW Notices: リンクタイプ変更:", linkType);
 
 						// すべてのリンクタイプフィールドを非表示
-						$(".link-type-field").hide();
+						$(".link-type-field").removeClass("show").hide();
 
 						// 選択されたタイプのフィールドを表示
 						if (linkType) {
 							var targetId = "#link-type-" + linkType;
+							var $targetElement = $(targetId);
 							console.log("ANDW Notices: 表示する要素:", targetId);
-							$(targetId).show();
+							console.log("ANDW Notices: 要素の存在:", $targetElement.length);
+							console.log("ANDW Notices: 要素の現在のスタイル:", $targetElement.attr("style"));
+
+							// 強制的に表示（CSS競合対策）
+							$targetElement.addClass("show").css({
+								"display": "table-row",
+								"visibility": "visible"
+							}).show();
+
+							console.log("ANDW Notices: 表示後のスタイル:", $targetElement.attr("style"));
+							console.log("ANDW Notices: クラス:", $targetElement.attr("class"));
 						}
 					}
 
