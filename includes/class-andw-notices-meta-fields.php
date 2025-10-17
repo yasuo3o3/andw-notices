@@ -232,6 +232,22 @@ class ANDW_Notices_Meta_Fields {
 						// すべてのリンクタイプフィールドを非表示
 						$(".link-type-field").removeClass("show").hide();
 
+						// 新規タブのデフォルト状態を設定（ユーザーが手動で変更していない場合のみ）
+						var $targetBlankCheckbox = $("#andw_notices_target_blank");
+						var isUserModified = $targetBlankCheckbox.data("user-modified");
+
+						if (!isUserModified) {
+							if (linkType === "external") {
+								// 外部URLの場合はデフォルトでチェック
+								$targetBlankCheckbox.prop("checked", true);
+								console.log("ANDW Notices: 外部URLのため新規タブをON");
+							} else if (linkType === "self" || linkType === "internal") {
+								// 内部ページの場合はデフォルトでチェック解除
+								$targetBlankCheckbox.prop("checked", false);
+								console.log("ANDW Notices: 内部ページのため新規タブをOFF");
+							}
+						}
+
 						// 選択されたタイプのフィールドを表示
 						if (linkType) {
 							var targetId = "#link-type-" + linkType;
@@ -276,6 +292,12 @@ class ANDW_Notices_Meta_Fields {
 
 					// ラジオボタンの変更イベント
 					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
+
+					// 新規タブチェックボックスの手動変更を追跡
+					$("#andw_notices_target_blank").on("change", function() {
+						$(this).data("user-modified", true);
+						console.log("ANDW Notices: ユーザーが新規タブ設定を手動で変更しました");
+					});
 
 					// Select2統合型検索セレクトの初期化
 					function initSelect2() {
@@ -354,6 +376,9 @@ class ANDW_Notices_Meta_Fields {
 
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
+						// ページ読み込み時は自動設定として扱う（user-modifiedをfalseに設定）
+						$("#andw_notices_target_blank").data("user-modified", false);
+
 						toggleEventFields();
 						toggleLinkTypeFields();
 
@@ -604,6 +629,7 @@ class ANDW_Notices_Meta_Fields {
 				<td>
 					<label>
 						<input type="checkbox"
+							   id="andw_notices_target_blank"
 							   name="andw_notices_target_blank"
 							   value="1"
 							   <?php checked( $target_blank, '1' ); ?> />
