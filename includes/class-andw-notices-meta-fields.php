@@ -59,16 +59,28 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
 
+			// Add cache-busting version
+			$script_version = '1.0.1-' . time();
+
 			// CSS for meta box styling
 			wp_add_inline_style( 'jquery-ui-datepicker', '
 				.link-type-field {
 					display: none !important;
 				}
 				.link-type-field.show {
-					display: block !important;
+					display: table-row !important;
 					visibility: visible !important;
 					height: auto !important;
 					opacity: 1 !important;
+					position: relative !important;
+				}
+				tr.link-type-field.show {
+					display: table-row !important;
+				}
+				#link-type-internal.show,
+				#link-type-external.show {
+					display: table-row !important;
+					visibility: visible !important;
 				}
 			' );
 
@@ -122,7 +134,17 @@ class ANDW_Notices_Meta_Fields {
 							setTimeout(function() {
 								if (!$targetElement.is(":visible")) {
 									console.log("ANDW Notices: 標準方法で表示されないため、代替方法を試行");
-									$targetElement.removeAttr("style").removeClass().addClass("show").attr("style", "display:block!important;visibility:visible!important;");
+
+									// より強力な表示方法
+									$targetElement.attr("style", "display:table-row!important;visibility:visible!important;height:auto!important;opacity:1!important;").removeClass().addClass("show");
+
+									// さらなる確認
+									setTimeout(function() {
+										if (!$targetElement.is(":visible")) {
+											console.log("ANDW Notices: テーブル行でも表示されない、ブロック表示に変更");
+											$targetElement.attr("style", "display:block!important;visibility:visible!important;height:auto!important;opacity:1!important;position:relative!important;");
+										}
+									}, 100);
 								}
 							}, 200);
 						}
