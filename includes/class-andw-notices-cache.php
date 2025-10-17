@@ -255,17 +255,26 @@ class ANDW_Notices_Cache {
 	 * プレフィックス付きTransientの一括削除
 	 *
 	 * @param string $prefix Transientプレフィックス
+	 * @return int 削除件数
 	 */
 	private static function cleanup_transients_by_prefix( $prefix ) {
-		global $wpdb;
+		// 記録されたキーから該当プレフィックスを抽出
+		$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+		$deleted_count = 0;
 
-		// 直接SQLでの削除（WordPress.orgでは許可される場合がある特殊なケース）
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				$wpdb->esc_like( '_transient_' . $prefix ) . '%',
-				$wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%'
-			)
-		);
+		foreach ( $recorded_keys as $index => $cache_key ) {
+			$transient_key = $prefix . $cache_key;
+			if ( delete_transient( $transient_key ) ) {
+				unset( $recorded_keys[ $index ] );
+				$deleted_count++;
+			}
+		}
+
+		// 更新されたキーリストを保存
+		if ( $deleted_count > 0 ) {
+			update_option( 'andw_notices_cache_keys', array_values( $recorded_keys ), false );
+		}
+
+		return $deleted_count;
 	}
 }
