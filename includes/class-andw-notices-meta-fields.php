@@ -29,6 +29,7 @@ class ANDW_Notices_Meta_Fields {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_admin_scripts' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_admin_scripts' ) );
 		add_action( 'init', array( __CLASS__, 'register_meta_fields' ) );
+		add_action( 'wp_ajax_andw_notices_search_posts', array( __CLASS__, 'ajax_search_posts' ) );
 	}
 
 	/**
@@ -59,9 +60,9 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
 
-			// Select2 for searchable dropdowns
-			wp_enqueue_script( 'select2' );
-			wp_enqueue_style( 'select2' );
+			// jQuery UI Autocomplete for searchable dropdowns
+			wp_enqueue_script( 'jquery-ui-autocomplete' );
+			wp_enqueue_style( 'wp-jquery-ui-dialog' );
 
 			// Add cache-busting version
 			$script_version = '1.0.2-' . time();
@@ -168,79 +169,66 @@ class ANDW_Notices_Meta_Fields {
 					// ラジオボタンの変更イベント
 					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
 
-					// Select2初期化
-					function initSelect2() {
-						console.log("ANDW Notices: Select2初期化開始");
+					// Autocomplete初期化
+					function initAutocomplete() {
+						console.log("ANDW Notices: Autocomplete初期化開始");
 
-						$("#andw_notices_target_post_id").select2({
-							placeholder: "タイトルまたはスラッグで検索...",
-							allowClear: true,
-							width: "100%",
-							minimumInputLength: 0,
-							language: {
-								noResults: function() {
-									return "該当する投稿・ページが見つかりません";
-								},
-								searching: function() {
-									return "検索中...";
-								}
+						$("#andw_notices_target_post_search").autocomplete({
+							source: function(request, response) {
+								// AJAX経由で投稿・ページを検索
+								$.ajax({
+									url: ajaxurl,
+									type: "POST",
+									dataType: "json",
+									data: {
+										action: "andw_notices_search_posts",
+										term: request.term,
+										nonce: "<?php echo wp_create_nonce( 'andw_notices_search_nonce' ); ?>"
+									},
+									success: function(data) {
+										response(data);
+									},
+									error: function() {
+										response([]);
+									}
+								});
 							},
-							matcher: function(params, data) {
-								// 検索語が空の場合は全て表示
-								if ($.trim(params.term) === "") {
-									return data;
-								}
-
-								// 検索語を小文字に変換
-								var term = params.term.toLowerCase();
-
-								// テキスト内容を取得
-								var text = (data.text || "").toLowerCase();
-
-								// data-slug と data-type も検索対象に含める
-								var $option = $("#andw_notices_target_post_id option[value=\"" + data.id + "\"]");
-								var slug = ($option.attr("data-slug") || "").toLowerCase();
-								var type = ($option.attr("data-type") || "").toLowerCase();
-
-								// タイトル、スラッグ、投稿タイプのいずれかにマッチするかチェック
-								if (text.indexOf(term) > -1 ||
-									slug.indexOf(term) > -1 ||
-									type.indexOf(term) > -1) {
-									return data;
-								}
-
-								// マッチしない場合はnullを返す
-								return null;
+							minLength: 1,
+							select: function(event, ui) {
+								// 選択されたアイテムをhiddenフィールドに設定
+								$("#andw_notices_target_post_id").val(ui.item.id);
+								$("#andw_notices_target_post_search").val(ui.item.label);
+								return false;
 							}
 						});
 
-						console.log("ANDW Notices: Select2初期化完了");
+						console.log("ANDW Notices: Autocomplete初期化完了");
 					}
 
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
 						toggleLinkTypeFields();
 
-						// Select2初期化（internal選択時のみ）
+						// Autocomplete初期化（internal選択時のみ）
 						if ($("input[name=\"andw_notices_link_type\"]:checked").val() === "internal") {
-							initSelect2();
+							initAutocomplete();
 						}
 
 						console.log("ANDW Notices: 初期化完了");
 					}, 100);
 
-					// リンクタイプ変更時にSelect2を再初期化
+					// リンクタイプ変更時にAutocompleteを再初期化
 					$("input[name=\"andw_notices_link_type\"]").on("change", function() {
 						var linkType = $(this).val();
 
-						// 既存のSelect2を破棄
-						if ($("#andw_notices_target_post_id").hasClass("select2-hidden-accessible")) {
-							$("#andw_notices_target_post_id").select2("destroy");
+						// 既存のAutocompleteを破棄
+						if ($("#andw_notices_target_post_search").hasClass("ui-autocomplete-input")) {
+							$("#andw_notices_target_post_search").autocomplete("destroy");
 						}
 
-						// internalタイプの場合のみSelect2を再初期化
+						// internalタイプの場合のみAutocompleteを再初期化
 						if (linkType === "internal") {
-							setTimeout(initSelect2, 100);
+							setTimeout(initAutocomplete, 100);
 						}
 					});
 				});
@@ -310,33 +298,27 @@ class ANDW_Notices_Meta_Fields {
 				</th>
 				<td>
 					<?php
-					// カスタムセレクトボックスを作成（投稿と固定ページの両方を含む）
-					$posts_and_pages = get_posts( array(
-						'post_type'      => array( 'post', 'page' ),
-						'post_status'    => 'publish',
-						'numberposts'    => -1,
-						'orderby'        => 'title',
-						'order'          => 'ASC'
-					) );
+					// 現在選択されている投稿・ページの情報を取得
+					$selected_post_title = '';
+					if ( $target_post_id ) {
+						$selected_post = get_post( $target_post_id );
+						if ( $selected_post ) {
+							$post_type_label = $selected_post->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
+							$selected_post_title = $selected_post->post_title . ' (' . $post_type_label . ') - ' . $selected_post->post_name;
+						}
+					}
 					?>
-					<select name="andw_notices_target_post_id" id="andw_notices_target_post_id" class="andw-notices-post-select">
-						<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
-						<?php foreach ( $posts_and_pages as $post_item ) :
-							$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
-							$slug = $post_item->post_name;
-						?>
-							<option value="<?php echo esc_attr( $post_item->ID ); ?>"
-									<?php selected( $target_post_id, $post_item->ID ); ?>
-									data-slug="<?php echo esc_attr( $slug ); ?>"
-									data-type="<?php echo esc_attr( $post_type_label ); ?>">
-								<?php echo esc_html( $post_item->post_title ); ?>
-								(<?php echo esc_html( $post_type_label ); ?>)
-								- <?php echo esc_html( $slug ); ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
+					<input type="text"
+						   id="andw_notices_target_post_search"
+						   class="regular-text andw-notices-post-search"
+						   placeholder="タイトルまたはスラッグで検索..."
+						   value="<?php echo esc_attr( $selected_post_title ); ?>" />
+					<input type="hidden"
+						   name="andw_notices_target_post_id"
+						   id="andw_notices_target_post_id"
+						   value="<?php echo esc_attr( $target_post_id ); ?>" />
 					<p class="description">
-						<?php esc_html_e( 'リンク先の投稿または固定ページを選択してください。', 'andw-notices' ); ?>
+						<?php esc_html_e( 'リンク先の投稿または固定ページを選択してください。タイトルやスラッグで検索できます。', 'andw-notices' ); ?>
 					</p>
 				</td>
 			</tr>
@@ -554,5 +536,40 @@ class ANDW_Notices_Meta_Fields {
 			'show_in_rest'      => true,
 			'sanitize_callback' => 'rest_sanitize_boolean',
 		) );
+	}
+
+	/**
+	 * AJAX投稿・ページ検索ハンドラ
+	 */
+	public static function ajax_search_posts() {
+		// nonce確認
+		if ( ! wp_verify_nonce( $_POST['nonce'], 'andw_notices_search_nonce' ) ) {
+			wp_die( 'Security check failed' );
+		}
+
+		$term = sanitize_text_field( $_POST['term'] );
+		$results = array();
+
+		if ( strlen( $term ) >= 1 ) {
+			$posts = get_posts( array(
+				'post_type'      => array( 'post', 'page' ),
+				'post_status'    => 'publish',
+				'numberposts'    => 20,
+				's'              => $term,
+				'orderby'        => 'title',
+				'order'          => 'ASC'
+			) );
+
+			foreach ( $posts as $post ) {
+				$post_type_label = $post->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
+				$results[] = array(
+					'id'    => $post->ID,
+					'label' => $post->post_title . ' (' . $post_type_label . ') - ' . $post->post_name,
+					'value' => $post->post_title
+				);
+			}
+		}
+
+		wp_send_json( $results );
 	}
 }
