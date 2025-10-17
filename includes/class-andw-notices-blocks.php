@@ -313,6 +313,12 @@ class ANDW_Notices_Blocks {
 				$html .= '</time>';
 			}
 
+			// イベント日付の表示
+			$event_output = ANDW_Notices_Post_Type::get_notice_event_output( $notice->ID );
+			if ( ! empty( $event_output ) ) {
+				$html .= $event_output;
+			}
+
 			// タイトルの表示
 			if ( $attributes['showTitle'] ) {
 				$title = get_the_title( $notice->ID );

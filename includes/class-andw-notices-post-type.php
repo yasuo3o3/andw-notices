@@ -190,6 +190,120 @@ class ANDW_Notices_Post_Type {
 	}
 
 	/**
+	 * お知らせのイベントデータを取得
+	 *
+	 * @param int $post_id 投稿ID
+	 * @return array イベントデータ配列
+	 */
+	public static function get_notice_event_data( $post_id ) {
+		$event_data = get_post_meta( $post_id, 'andw_notices_event_data', true );
+
+		// デフォルト値を設定
+		if ( empty( $event_data ) || ! is_array( $event_data ) ) {
+			$event_data = array(
+				'type' => 'none',
+				'label' => '',
+				'single_date' => '',
+				'start_date' => '',
+				'end_date' => '',
+				'free_text' => ''
+			);
+		}
+
+		return $event_data;
+	}
+
+	/**
+	 * お知らせのイベント日付をフォーマット済みで取得
+	 *
+	 * @param int   $post_id 投稿ID
+	 * @param array $options 表示オプション
+	 * @return string フォーマット済みのイベント日付HTML
+	 */
+	public static function get_notice_event_output( $post_id, $options = array() ) {
+		$event_data = self::get_notice_event_data( $post_id );
+
+		// イベント日付なしの場合は空文字を返す
+		if ( 'none' === $event_data['type'] ) {
+			return '';
+		}
+
+		// デフォルトオプション
+		$default_options = array(
+			'container_class' => 'andw_notices_event',
+			'label_class'     => 'andw_notices_event_label',
+			'date_class'      => 'andw_notices_event_date',
+			'separator'       => '：',
+			'date_format'     => get_option( 'date_format' ),
+			'period_separator' => ' ～ ',
+		);
+
+		$options = wp_parse_args( $options, $default_options );
+
+		$output = '';
+		$label = '';
+		$date_content = '';
+
+		// ラベルの準備
+		if ( ! empty( $event_data['label'] ) ) {
+			$label = '<span class="' . esc_attr( $options['label_class'] ) . '">' .
+					 esc_html( $event_data['label'] ) .
+					 esc_html( $options['separator'] ) .
+					 '</span>';
+		}
+
+		// タイプ別の日付コンテンツ生成
+		switch ( $event_data['type'] ) {
+			case 'single':
+				if ( ! empty( $event_data['single_date'] ) ) {
+					$formatted_date = mysql2date( $options['date_format'], $event_data['single_date'] );
+					$date_content = '<time datetime="' . esc_attr( $event_data['single_date'] ) . '">' .
+								   esc_html( $formatted_date ) .
+								   '</time>';
+				}
+				break;
+
+			case 'period':
+				if ( ! empty( $event_data['start_date'] ) && ! empty( $event_data['end_date'] ) ) {
+					$start_formatted = mysql2date( $options['date_format'], $event_data['start_date'] );
+					$end_formatted = mysql2date( $options['date_format'], $event_data['end_date'] );
+
+					$date_content = '<time datetime="' . esc_attr( $event_data['start_date'] ) . '">' .
+								   esc_html( $start_formatted ) .
+								   '</time>' .
+								   esc_html( $options['period_separator'] ) .
+								   '<time datetime="' . esc_attr( $event_data['end_date'] ) . '">' .
+								   esc_html( $end_formatted ) .
+								   '</time>';
+				} elseif ( ! empty( $event_data['start_date'] ) ) {
+					$start_formatted = mysql2date( $options['date_format'], $event_data['start_date'] );
+					$date_content = '<time datetime="' . esc_attr( $event_data['start_date'] ) . '">' .
+								   esc_html( $start_formatted ) .
+								   '</time>';
+				}
+				break;
+
+			case 'text':
+				if ( ! empty( $event_data['free_text'] ) ) {
+					$date_content = esc_html( $event_data['free_text'] );
+				}
+				break;
+		}
+
+		// 出力の組み立て
+		if ( ! empty( $date_content ) ) {
+			$output = '<div class="' . esc_attr( $options['container_class'] ) . '">' .
+					  $label .
+					  '<span class="' . esc_attr( $options['date_class'] ) . '">' .
+					  $date_content .
+					  '</span>' .
+					  '</div>';
+		}
+
+		return $output;
+	}
+
+	/**
 	 * REST APIフィールドの登録
 	 */
 	public static function register_rest_fields() {
@@ -229,6 +343,44 @@ class ANDW_Notices_Post_Type {
 			},
 			'schema'          => array(
 				'description' => __( 'リンクタイプ', 'andw-notices' ),
+				'type'        => 'string',
+				'context'     => array( 'view', 'edit' ),
+			),
+		) );
+
+		// イベントデータメタフィールド
+		register_rest_field( self::POST_TYPE, 'andw_event_data', array(
+			'get_callback'    => function( $object ) {
+				return self::get_notice_event_data( $object['id'] );
+			},
+			'update_callback' => function( $value, $object ) {
+				if ( current_user_can( 'edit_post', $object->ID ) ) {
+					return update_post_meta( $object->ID, 'andw_notices_event_data', $value );
+				}
+				return false;
+			},
+			'schema'          => array(
+				'description' => __( 'イベント日付データ', 'andw-notices' ),
+				'type'        => 'object',
+				'context'     => array( 'view', 'edit' ),
+				'properties'  => array(
+					'type'        => array( 'type' => 'string' ),
+					'label'       => array( 'type' => 'string' ),
+					'single_date' => array( 'type' => 'string' ),
+					'start_date'  => array( 'type' => 'string' ),
+					'end_date'    => array( 'type' => 'string' ),
+					'free_text'   => array( 'type' => 'string' ),
+				),
+			),
+		) );
+
+		// イベント出力（HTML）メタフィールド
+		register_rest_field( self::POST_TYPE, 'andw_event_output', array(
+			'get_callback'    => function( $object ) {
+				return self::get_notice_event_output( $object['id'] );
+			},
+			'schema'          => array(
+				'description' => __( 'イベント日付HTML出力', 'andw-notices' ),
 				'type'        => 'string',
 				'context'     => array( 'view', 'edit' ),
 			),
