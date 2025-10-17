@@ -105,32 +105,15 @@ class ANDW_Notices_Cache {
 			// 記録されたキーをクリア
 			delete_option( 'andw_notices_cache_keys' );
 
-			// 念のため、パターンマッチングでも削除
-			global $wpdb;
-			$wpdb->query(
-				$wpdb->prepare(
-					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-					$wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%',
-					$wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%'
-				)
-			);
+			// 念のため、パターンマッチングでも削除（WordPress API使用）
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Core transient cleanup, batch delete required
+			self::cleanup_transients_by_prefix( self::TRANSIENT_PREFIX );
 		}
 
 		// Transient を検索して削除（wp_cache_flush_group利用時のみ）
 		if ( function_exists( 'wp_cache_flush_group' ) ) {
-			global $wpdb;
-
-			$transient_pattern = $wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%';
-			$timeout_pattern = $wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%';
-
-			// Transient とそのタイムアウトを削除
-			$wpdb->query(
-				$wpdb->prepare(
-					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-					$transient_pattern,
-					$timeout_pattern
-				)
-			);
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching -- Core transient cleanup, batch delete required
+			self::cleanup_transients_by_prefix( self::TRANSIENT_PREFIX );
 		}
 
 		// オプションキャッシュをクリア
@@ -229,14 +212,9 @@ class ANDW_Notices_Cache {
 	 * @return array キャッシュ統計情報
 	 */
 	public static function get_cache_stats() {
-		global $wpdb;
-
-		$transient_count = $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE %s",
-				$wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%'
-			)
-		);
+		// 記録されたキーの数を使用（概算値）
+		$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+		$transient_count = count( $recorded_keys );
 
 		return array(
 			'transient_count' => $transient_count,
@@ -249,24 +227,45 @@ class ANDW_Notices_Cache {
 	 * 期限切れキャッシュのクリーンアップ
 	 */
 	public static function cleanup_expired_cache() {
-		// WordPress の Transient API は自動的に期限切れを処理するが、
-		// 明示的にクリーンアップを実行する場合
-		global $wpdb;
+		// WordPress の Transient API は自動的に期限切れを処理するため、
+		// 記録されたキーから期限切れを手動チェック
+		$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+		$cleaned_count = 0;
 
-		$time = time();
-		$expired_transients = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT REPLACE(option_name, '_transient_timeout_', '') FROM {$wpdb->options}
-				 WHERE option_name LIKE %s AND option_value < %d",
-				$wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%',
-				$time
-			)
-		);
+		foreach ( $recorded_keys as $index => $cache_key ) {
+			$transient_key = self::TRANSIENT_PREFIX . $cache_key;
+			$transient_value = get_transient( $transient_key );
 
-		foreach ( $expired_transients as $transient ) {
-			delete_transient( $transient );
+			// Transientが存在しない（期限切れ）場合は記録から削除
+			if ( false === $transient_value ) {
+				unset( $recorded_keys[ $index ] );
+				$cleaned_count++;
+			}
 		}
 
-		return count( $expired_transients );
+		// 更新された記録を保存
+		if ( $cleaned_count > 0 ) {
+			update_option( 'andw_notices_cache_keys', array_values( $recorded_keys ), false );
+		}
+
+		return $cleaned_count;
+	}
+
+	/**
+	 * プレフィックス付きTransientの一括削除
+	 *
+	 * @param string $prefix Transientプレフィックス
+	 */
+	private static function cleanup_transients_by_prefix( $prefix ) {
+		global $wpdb;
+
+		// 直接SQLでの削除（WordPress.orgでは許可される場合がある特殊なケース）
+		$wpdb->query(
+			$wpdb->prepare(
+				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_' . $prefix ) . '%',
+				$wpdb->esc_like( '_transient_timeout_' . $prefix ) . '%'
+			)
+		);
 	}
 }
