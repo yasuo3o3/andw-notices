@@ -170,10 +170,13 @@ class ANDW_Notices_Meta_Fields {
 
 					// Select2初期化
 					function initSelect2() {
+						console.log("ANDW Notices: Select2初期化開始");
+
 						$("#andw_notices_target_post_id").select2({
 							placeholder: "タイトルまたはスラッグで検索...",
 							allowClear: true,
 							width: "100%",
+							minimumInputLength: 0,
 							language: {
 								noResults: function() {
 									return "該当する投稿・ページが見つかりません";
@@ -181,8 +184,37 @@ class ANDW_Notices_Meta_Fields {
 								searching: function() {
 									return "検索中...";
 								}
+							},
+							matcher: function(params, data) {
+								// 検索語が空の場合は全て表示
+								if ($.trim(params.term) === '') {
+									return data;
+								}
+
+								// 検索語を小文字に変換
+								var term = params.term.toLowerCase();
+
+								// テキスト内容を取得
+								var text = (data.text || '').toLowerCase();
+
+								// data-slug と data-type も検索対象に含める
+								var $option = $("#andw_notices_target_post_id option[value='" + data.id + "']");
+								var slug = ($option.attr('data-slug') || '').toLowerCase();
+								var type = ($option.attr('data-type') || '').toLowerCase();
+
+								// タイトル、スラッグ、投稿タイプのいずれかにマッチするかチェック
+								if (text.indexOf(term) > -1 ||
+									slug.indexOf(term) > -1 ||
+									type.indexOf(term) > -1) {
+									return data;
+								}
+
+								// マッチしない場合はnullを返す
+								return null;
 							}
 						});
+
+						console.log("ANDW Notices: Select2初期化完了");
 					}
 
 					// 初期表示（少し遅延させて確実に実行）
