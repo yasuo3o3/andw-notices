@@ -63,17 +63,42 @@ class ANDW_Notices_Meta_Fields {
 				'jquery-ui-datepicker',
 				'
 				jQuery(document).ready(function($) {
+					// デバッグ用ログ
+					console.log("ANDW Notices: JavaScript初期化開始");
+
+					// Datepicker初期化
 					$("#andw_notices_display_date").datepicker({
 						dateFormat: "yy-mm-dd",
 						changeMonth: true,
 						changeYear: true
 					});
 
-					$("input[name=\"andw_notices_link_type\"]").change(function() {
-						var linkType = $(this).val();
+					// リンクタイプ選択の処理
+					function toggleLinkTypeFields() {
+						var $selectedRadio = $("input[name=\"andw_notices_link_type\"]:checked");
+						var linkType = $selectedRadio.val();
+
+						console.log("ANDW Notices: リンクタイプ変更:", linkType);
+
+						// すべてのリンクタイプフィールドを非表示
 						$(".link-type-field").hide();
-						$("#link-type-" + linkType).show();
-					}).trigger("change");
+
+						// 選択されたタイプのフィールドを表示
+						if (linkType) {
+							var targetId = "#link-type-" + linkType;
+							console.log("ANDW Notices: 表示する要素:", targetId);
+							$(targetId).show();
+						}
+					}
+
+					// ラジオボタンの変更イベント
+					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
+
+					// 初期表示（少し遅延させて確実に実行）
+					setTimeout(function() {
+						toggleLinkTypeFields();
+						console.log("ANDW Notices: 初期化完了");
+					}, 100);
 				});
 				'
 			);
