@@ -246,7 +246,10 @@ class ANDW_Notices_Admin_Columns {
 	public static function ajax_get_quick_edit_data() {
 		check_ajax_referer( 'andw_notices_quick_edit_nonce', 'nonce' );
 
-		$post_id = absint( $_POST['post_id'] );
+		if ( empty( $_POST['post_id'] ) ) {
+			wp_die( -1, 400 );
+		}
+		$post_id = absint( wp_unslash( $_POST['post_id'] ) );
 
 		if ( ! current_user_can( 'edit_post', $post_id ) ) {
 			wp_die( -1, 403 );

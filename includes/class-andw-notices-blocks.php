@@ -210,7 +210,8 @@ class ANDW_Notices_Blocks {
 
 		// デバッグ情報（開発時のみ）
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'ANDW Notices Debug: WP_Query args: ' . print_r( $args, true ) );
+			// デバッグフックで外部処理可能
+			do_action( 'andw_notices_debug', 'WP_Query args', wp_json_encode( $args ) );
 
 			// 簡単なクエリでnotices投稿タイプの投稿数を確認
 			$simple_query = new WP_Query( array(
@@ -219,11 +220,11 @@ class ANDW_Notices_Blocks {
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 			) );
-			error_log( 'ANDW Notices Debug: 総notices投稿数: ' . $simple_query->found_posts );
+			do_action( 'andw_notices_debug', '総notices投稿数', $simple_query->found_posts );
 
 			// 投稿タイプが正しく登録されているか確認
 			$post_types = get_post_types( array(), 'names' );
-			error_log( 'ANDW Notices Debug: 登録済み投稿タイプ: ' . implode( ', ', $post_types ) );
+			do_action( 'andw_notices_debug', '登録済み投稿タイプ', implode( ', ', $post_types ) );
 		}
 
 		// フィルタリング
@@ -254,18 +255,18 @@ class ANDW_Notices_Blocks {
 
 		// デバッグ情報（開発時のみ）
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'ANDW Notices Debug: クエリ結果: 見つかった投稿数: ' . $query->found_posts );
-			error_log( 'ANDW Notices Debug: 取得した投稿数: ' . count( $query->posts ) );
+			do_action( 'andw_notices_debug', 'クエリ結果: 見つかった投稿数', $query->found_posts );
+			do_action( 'andw_notices_debug', '取得した投稿数', count( $query->posts ) );
 			if ( ! empty( $query->posts ) ) {
 				$post_ids = array_map( function( $post ) { return $post->ID; }, $query->posts );
-				error_log( 'ANDW Notices Debug: 投稿ID: ' . implode( ', ', $post_ids ) );
+				do_action( 'andw_notices_debug', '投稿ID', implode( ', ', $post_ids ) );
 			}
 		}
 
 		// もし複雑なクエリで結果が空の場合、シンプルなクエリでフォールバック
 		if ( empty( $query->posts ) && ( ! empty( $args['meta_query'] ) || ! empty( $args['meta_key'] ) ) ) {
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'ANDW Notices Debug: 複雑なクエリで結果が空だったため、シンプルなクエリにフォールバック' );
+				do_action( 'andw_notices_debug', 'フォールバック', '複雑なクエリで結果が空だったため、シンプルなクエリにフォールバック' );
 			}
 
 			$fallback_args = array(
@@ -279,7 +280,7 @@ class ANDW_Notices_Blocks {
 			$fallback_query = new WP_Query( $fallback_args );
 
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'ANDW Notices Debug: フォールバッククエリ結果: ' . $fallback_query->found_posts . '件' );
+				do_action( 'andw_notices_debug', 'フォールバッククエリ結果', $fallback_query->found_posts . '件' );
 			}
 
 			return $fallback_query->posts;
