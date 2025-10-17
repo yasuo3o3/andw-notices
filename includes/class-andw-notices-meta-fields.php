@@ -151,7 +151,7 @@ class ANDW_Notices_Meta_Fields {
 				}
 
 				/* イベント日付フィールド用スタイル（管理画面） */
-				.andw_notices_event {
+				#andw-notices-settings .andw_notices_event {
 					border: 1px solid #ddd;
 					padding: 15px;
 					background-color: #f9f9f9;
@@ -360,16 +360,27 @@ class ANDW_Notices_Meta_Fields {
 
 					// イベント表示プレビュー機能
 					function updateEventPreview() {
-						var eventType = $("input[name=\"andw_notices_event_type\"]:checked").val();
-						var eventLabel = $("#andw_notices_event_label").val();
-						var displayPreset = $("#andw_notices_display_preset").val();
-						var previewContainer = $("#event-preview");
+						console.log("ANDW Notices: プレビュー更新開始");
 
-						// イベント日付なしの場合
-						if (eventType === "none" || !eventType) {
-							previewContainer.html("<em>イベント日付が設定されていません</em>");
-							return;
-						}
+						try {
+							var $eventTypeRadio = $("input[name=\"andw_notices_event_type\"]:checked");
+							var eventType = $eventTypeRadio.length > 0 ? $eventTypeRadio.val() : "none";
+							var eventLabel = $("#andw_notices_event_label").val() || "";
+							var displayPreset = $("#andw_notices_display_preset").val() || "default";
+							var $previewContainer = $("#event-preview");
+
+							console.log("ANDW Notices: イベントタイプ =", eventType, "プリセット =", displayPreset);
+
+							if ($previewContainer.length === 0) {
+								console.warn("ANDW Notices: プレビューコンテナが見つかりません");
+								return;
+							}
+
+							// イベント日付なしの場合
+							if (eventType === "none" || !eventType) {
+								$previewContainer.html("<em>イベント日付が設定されていません</em>");
+								return;
+							}
 
 						// データを取得
 						var eventData = {
@@ -381,9 +392,15 @@ class ANDW_Notices_Meta_Fields {
 							free_text: $("#andw_notices_event_free_text").val() || "近日公開"
 						};
 
-						// プレビューHTMLを生成
-						var previewHtml = generatePreviewHtml(eventData, displayPreset);
-						previewContainer.html(previewHtml);
+							// プレビューHTMLを生成
+							var previewHtml = generatePreviewHtml(eventData, displayPreset);
+							$previewContainer.html(previewHtml);
+
+							console.log("ANDW Notices: プレビュー更新完了");
+						} catch (error) {
+							console.error("ANDW Notices: プレビュー更新エラー:", error);
+							$("#event-preview").html("<em>プレビューエラーが発生しました</em>");
+						}
 					}
 
 					function generatePreviewHtml(eventData, preset) {
@@ -667,6 +684,13 @@ class ANDW_Notices_Meta_Fields {
 	public static function render_meta_box( $post ) {
 		wp_nonce_field( 'andw_notices_meta_nonce', 'andw_notices_meta_nonce' );
 
+		// デバッグ情報（開発時のみ表示）
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			echo '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 10px;">';
+			echo '<strong>デバッグ情報:</strong> メタボックスが正常に読み込まれました。投稿ID: ' . $post->ID;
+			echo '</div>';
+		}
+
 		$event_data = get_post_meta( $post->ID, self::META_PREFIX . 'event_data', true );
 		$display_preset = get_post_meta( $post->ID, self::META_PREFIX . 'display_preset', true );
 		$link_type = get_post_meta( $post->ID, self::META_PREFIX . 'link_type', true );
@@ -886,8 +910,8 @@ class ANDW_Notices_Meta_Fields {
 						</div>
 
 						<!-- 表示スタイル設定 -->
-						<div id="event-display-settings" class="event-field" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
-							<h4><?php esc_html_e( '表示スタイル', 'andw-notices' ); ?></h4>
+						<div id="event-display-settings" class="event-field" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd; display: block !important;">
+							<h4 style="margin-top: 0;"><?php esc_html_e( '表示スタイル', 'andw-notices' ); ?></h4>
 							<label for="andw_notices_display_preset">
 								<?php esc_html_e( 'プリセット', 'andw-notices' ); ?>
 							</label><br />
@@ -907,8 +931,22 @@ class ANDW_Notices_Meta_Fields {
 							<div id="event-preview-container" style="margin-top: 15px;">
 								<h5><?php esc_html_e( 'プレビュー', 'andw-notices' ); ?></h5>
 								<div id="event-preview" style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;">
-									<?php esc_html_e( 'イベント日付を設定するとプレビューが表示されます', 'andw-notices' ); ?>
+									<?php
+									// 初期プレビューの表示
+									if ( ! empty( $event_data ) && 'none' !== $event_data['type'] ) {
+										// 保存されたデータでプレビューを表示
+										echo wp_kses_post( ANDW_Notices_Post_Type::get_notice_event_output(
+											$post->ID,
+											array( 'preset' => $display_preset )
+										) );
+									} else {
+										esc_html_e( 'イベント日付を設定するとプレビューが表示されます', 'andw-notices' );
+									}
+									?>
 								</div>
+								<p class="description">
+									<?php esc_html_e( 'リアルタイムプレビューはJavaScriptが有効な場合に動作します', 'andw-notices' ); ?>
+								</p>
 							</div>
 						</div>
 					</div>
