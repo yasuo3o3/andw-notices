@@ -1,4 +1,4 @@
-=== ANDW 新着お知らせ (ANDW Notices) ===
+=== andW 新着お知らせ (andW Notices) ===
 Contributors: yasuo3o3
 Tags: notices, news, announcements, gutenberg
 Requires at least: 6.2
@@ -12,7 +12,7 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 == Description ==
 
-ANDW 新着お知らせ（ANDW Notices）は、日本語環境に最適化されたお知らせ管理プラグインです。
+andW 新着お知らせ（andW Notices）は、日本語環境に最適化されたお知らせ管理プラグインです。
 
 **主な機能**
 

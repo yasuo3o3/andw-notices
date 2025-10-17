@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: ANDW 新着お知らせ (ANDW Notices)
+ * Plugin Name: andW 新着お知らせ (andW Notices)
  * Description: 日本語UI対応の新着お知らせ管理プラグイン。カスタム投稿タイプとGutenbergブロックで、お知らせの一覧表示が簡単に行えます。
  * Version: 0.0.2
  * Author: yasuo3o3
