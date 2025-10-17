@@ -58,24 +58,29 @@ class ANDW_Notices_Meta_Fields {
 
 		if ( 'post.php' === $hook || 'post-new.php' === $hook ) {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
-			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
+			wp_enqueue_style(
+				'jquery-ui-datepicker',
+				plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/jquery-ui-1.12.1.css',
+				array(),
+				'1.12.1'
+			);
 
 			// Select2 for searchable dropdowns - with fallback
 			if ( wp_script_is( 'select2', 'registered' ) ) {
 				wp_enqueue_script( 'select2' );
 				wp_enqueue_style( 'select2' );
 			} else {
-				// Fallback to CDN if WordPress Select2 is not available
+				// Local Select2 resources (WordPress.org compliant)
 				wp_enqueue_script(
-					'select2-cdn',
-					'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+					'select2-local',
+					plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/select2-4.1.0.min.js',
 					array( 'jquery' ),
 					'4.1.0',
 					true
 				);
 				wp_enqueue_style(
-					'select2-cdn',
-					'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+					'select2-local',
+					plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/select2-4.1.0.min.css',
 					array(),
 					'4.1.0'
 				);
