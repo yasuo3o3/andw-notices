@@ -198,11 +198,13 @@ class ANDW_Notices_Blocks {
 		// 並び順の設定
 		if ( 'display_date' === $attributes['orderby'] ) {
 			// より安全な並び順設定：display_dateがない場合は投稿日でフォールバック
+			// 表示日順でのソートは要件のため必要
 			$args['orderby'] = array(
-				'meta_value' => 'DESC',
+				'meta_value' => 'DESC', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'date'       => 'DESC',
 			);
-			$args['meta_key'] = 'andw_notices_display_date';
+			// 表示日順ソートのため必要
+			$args['meta_key'] = 'andw_notices_display_date'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 			$args['meta_type'] = 'DATE';
 		} else {
 			$args['orderby'] = 'date';
@@ -246,7 +248,8 @@ class ANDW_Notices_Blocks {
 				);
 			}
 
-			$args['meta_query'] = isset( $args['meta_query'] )
+			// リンク種別によるフィルタリングのため必要
+			$args['meta_query'] = isset( $args['meta_query'] ) // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				? array( 'relation' => 'AND', $args['meta_query'], $meta_query )
 				: $meta_query;
 		}
