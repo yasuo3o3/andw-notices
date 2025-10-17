@@ -34,8 +34,7 @@ class ANDW_Notices {
 	 * プラグインの初期化
 	 */
 	public static function init() {
-		// 翻訳ファイルの読み込み（WP 4.6+ では自動読み込み）
-		add_action( 'init', array( __CLASS__, 'load_textdomain' ) );
+		// 翻訳ファイルの読み込み（WP 4.6+ では自動読み込みのため不要）
 
 		// プラグインの有効化・無効化フック
 		register_activation_hook( ANDW_NOTICES_PLUGIN_FILE, array( __CLASS__, 'activate' ) );
@@ -49,14 +48,10 @@ class ANDW_Notices {
 	}
 
 	/**
-	 * 翻訳ファイルの読み込み
+	 * 翻訳ファイルの読み込み（WP 4.6以降では自動読み込みのため空実装）
 	 */
 	public static function load_textdomain() {
-		load_plugin_textdomain(
-			ANDW_NOTICES_TEXT_DOMAIN,
-			false,
-			dirname( plugin_basename( ANDW_NOTICES_PLUGIN_FILE ) ) . '/languages'
-		);
+		// WP 4.6以降では自動読み込みされるため処理不要
 	}
 
 	/**

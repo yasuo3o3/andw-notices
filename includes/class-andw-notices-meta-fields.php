@@ -755,7 +755,7 @@ class ANDW_Notices_Meta_Fields {
 		// デバッグ情報（開発時のみ表示）
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			echo '<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; margin-bottom: 10px;">';
-			echo '<strong>デバッグ情報:</strong> メタボックスが正常に読み込まれました。投稿ID: ' . $post->ID;
+			echo '<strong>デバッグ情報:</strong> メタボックスが正常に読み込まれました。投稿ID: ' . absint( $post->ID );
 			echo '</div>';
 		}
 

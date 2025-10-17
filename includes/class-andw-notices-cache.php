@@ -116,20 +116,22 @@ class ANDW_Notices_Cache {
 			);
 		}
 
-		// Transient を検索して削除
-		global $wpdb;
+		// Transient を検索して削除（wp_cache_flush_group利用時のみ）
+		if ( function_exists( 'wp_cache_flush_group' ) ) {
+			global $wpdb;
 
-		$transient_pattern = $wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%';
-		$timeout_pattern = $wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%';
+			$transient_pattern = $wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%';
+			$timeout_pattern = $wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%';
 
-		// Transient とそのタイムアウトを削除
-		$wpdb->query(
-			$wpdb->prepare(
-				"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-				$transient_pattern,
-				$timeout_pattern
-			)
-		);
+			// Transient とそのタイムアウトを削除
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+					$transient_pattern,
+					$timeout_pattern
+				)
+			);
+		}
 
 		// オプションキャッシュをクリア
 		wp_cache_delete( 'alloptions', 'options' );
