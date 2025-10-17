@@ -97,6 +97,37 @@ class ANDW_Notices_Meta_Fields {
 					padding-left: 8px;
 					padding-right: 20px;
 				}
+
+				/* 検索可能セレクト専用スタイル */
+				.andw-searchable-select-container {
+					max-width: 100%;
+				}
+				.andw-search-input {
+					margin-bottom: 8px;
+					width: 100%;
+					box-sizing: border-box;
+				}
+				.andw-post-select {
+					width: 100%;
+					min-height: 200px;
+					max-height: 300px;
+					overflow-y: auto;
+					border: 1px solid #8c8f94;
+					border-radius: 4px;
+					background-color: #fff;
+				}
+				.andw-post-select option {
+					padding: 8px 12px;
+					line-height: 1.4;
+				}
+				.andw-post-select option:hover,
+				.andw-post-select option:focus {
+					background-color: #2271b1;
+					color: #fff;
+				}
+				.andw-post-select option[style*="display: none"] {
+					display: none !important;
+				}
 			' );
 
 			wp_add_inline_script(
@@ -168,49 +199,65 @@ class ANDW_Notices_Meta_Fields {
 					// ラジオボタンの変更イベント
 					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
 
-					// datalistの選択処理
-					function initDatalistHandler() {
-						console.log("ANDW Notices: Datalist初期化開始");
+					// 検索可能セレクトの処理
+					function initSearchableSelect() {
+						console.log("ANDW Notices: 検索可能セレクト初期化開始");
 
-						$("#andw_notices_target_post_search").on("input change", function() {
-							var inputValue = $(this).val();
-							var selectedPostId = "";
+						var $searchInput = $("#andw_notices_search_input");
+						var $select = $("#andw_notices_target_post_id");
+						var $options = $select.find("option");
 
-							// datalistのoptionから対応するpost-idを検索
-							$("#andw_notices_posts_list option").each(function() {
-								if ($(this).val() === inputValue) {
-									selectedPostId = $(this).data("post-id");
-									return false; // break
+						// 検索入力のイベント
+						$searchInput.on("input", function() {
+							var searchTerm = $(this).val().toLowerCase();
+							console.log("ANDW Notices: 検索語:", searchTerm);
+
+							// 全てのオプションをチェック
+							$options.each(function() {
+								var $option = $(this);
+								var searchText = $option.data("search-text") || "";
+
+								if (searchTerm === "" || searchText.indexOf(searchTerm) !== -1) {
+									// マッチする場合は表示
+									$option.show();
+								} else {
+									// マッチしない場合は非表示
+									$option.hide();
 								}
 							});
 
-							// hiddenフィールドに設定
-							$("#andw_notices_target_post_id").val(selectedPostId);
-							console.log("ANDW Notices: 選択されたID:", selectedPostId);
+							// 空のオプションは常に表示
+							$options.first().show();
 						});
 
-						console.log("ANDW Notices: Datalist初期化完了");
+						// セレクトボックスの選択イベント
+						$select.on("change", function() {
+							var selectedValue = $(this).val();
+							console.log("ANDW Notices: 選択されたID:", selectedValue);
+						});
+
+						console.log("ANDW Notices: 検索可能セレクト初期化完了");
 					}
 
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
 						toggleLinkTypeFields();
 
-						// datalist初期化（internal選択時のみ）
+						// 検索可能セレクト初期化（internal選択時のみ）
 						if ($("input[name=\"andw_notices_link_type\"]:checked").val() === "internal") {
-							initDatalistHandler();
+							initSearchableSelect();
 						}
 
 						console.log("ANDW Notices: 初期化完了");
 					}, 100);
 
-					// リンクタイプ変更時にdatalistを再初期化
+					// リンクタイプ変更時に検索可能セレクトを再初期化
 					$("input[name=\"andw_notices_link_type\"]").on("change", function() {
 						var linkType = $(this).val();
 
-						// internalタイプの場合のみdatalist初期化
+						// internalタイプの場合のみ検索可能セレクト初期化
 						if (linkType === "internal") {
-							setTimeout(initDatalistHandler, 100);
+							setTimeout(initSearchableSelect, 100);
 						}
 					});
 				});
@@ -300,34 +347,35 @@ class ANDW_Notices_Meta_Fields {
 					}
 					?>
 
-					<!-- 検索可能なテキスト入力 -->
-					<input type="text"
-						   id="andw_notices_target_post_search"
-						   list="andw_notices_posts_list"
-						   placeholder="タイトルまたはスラッグで検索..."
-						   value="<?php echo esc_attr( $selected_post_title ); ?>"
-						   class="regular-text" />
+					<!-- 検索可能セレクトボックス -->
+					<div class="andw-searchable-select-container">
+						<!-- 検索入力欄 -->
+						<input type="text"
+							   id="andw_notices_search_input"
+							   placeholder="タイトルまたはスラッグで検索..."
+							   class="regular-text andw-search-input" />
 
-					<!-- HTML5 datalist for suggestions -->
-					<datalist id="andw_notices_posts_list">
-						<?php foreach ( $posts_and_pages as $post_item ) :
-							$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
-							$display_text = $post_item->post_title . ' (' . $post_type_label . ') - ' . $post_item->post_name;
-						?>
-							<option value="<?php echo esc_attr( $display_text ); ?>" data-post-id="<?php echo esc_attr( $post_item->ID ); ?>">
-								<?php echo esc_html( $display_text ); ?>
-							</option>
-						<?php endforeach; ?>
-					</datalist>
-
-					<!-- Hidden field for the actual post ID -->
-					<input type="hidden"
-						   name="andw_notices_target_post_id"
-						   id="andw_notices_target_post_id"
-						   value="<?php echo esc_attr( $target_post_id ); ?>" />
+						<!-- セレクトボックス -->
+						<select name="andw_notices_target_post_id"
+								id="andw_notices_target_post_id"
+								class="regular-text andw-post-select"
+								size="8">
+							<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
+							<?php foreach ( $posts_and_pages as $post_item ) :
+								$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
+								$display_text = $post_item->post_title . ' (' . $post_type_label . ') - ' . $post_item->post_name;
+							?>
+								<option value="<?php echo esc_attr( $post_item->ID ); ?>"
+										<?php selected( $target_post_id, $post_item->ID ); ?>
+										data-search-text="<?php echo esc_attr( strtolower( $display_text ) ); ?>">
+									<?php echo esc_html( $display_text ); ?>
+								</option>
+							<?php endforeach; ?>
+						</select>
+					</div>
 
 					<p class="description">
-						<?php esc_html_e( 'タイトルまたはスラッグで検索してください。候補から選択すると自動で設定されます。', 'andw-notices' ); ?>
+						<?php esc_html_e( '上の検索ボックスでタイトルまたはスラッグを入力してフィルタし、下のリストから選択してください。', 'andw-notices' ); ?>
 					</p>
 				</td>
 			</tr>
