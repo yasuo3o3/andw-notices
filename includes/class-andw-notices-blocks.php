@@ -122,8 +122,7 @@ class ANDW_Notices_Blocks {
 			'excerptLength'     => 100,
 			'forceLinkOverride' => 'item',
 			'openInNewTab'      => null,
-			'layout'            => 'list',
-			'eventDisplayPreset' => 'default',
+			'template'          => 'list',
 		);
 
 		$attributes = wp_parse_args( $attributes, $default_attributes );
@@ -297,8 +296,8 @@ class ANDW_Notices_Blocks {
 	 * @return string HTML
 	 */
 	private static function generate_notices_html( $notices, $attributes ) {
-		$layout_class = 'list' === $attributes['layout'] ? 'andw-notices' : 'andw-notices andw-notices-card';
-		$html = '<ul class="' . esc_attr( $layout_class ) . '">';
+		$template_class = 'list' === $attributes['template'] ? 'andw-notices' : 'andw-notices andw-notices-card';
+		$html = '<ul class="' . esc_attr( $template_class ) . '">';
 
 		foreach ( $notices as $notice ) {
 			$html .= '<li class="andw-notice-item">';
@@ -315,8 +314,7 @@ class ANDW_Notices_Blocks {
 			}
 
 			// イベント日付の表示
-			$event_options = array( 'preset' => $attributes['eventDisplayPreset'] );
-			$event_output = ANDW_Notices_Post_Type::get_notice_event_output( $notice->ID, $event_options );
+			$event_output = ANDW_Notices_Post_Type::get_notice_event_output( $notice->ID );
 			if ( ! empty( $event_output ) ) {
 				$html .= $event_output;
 			}

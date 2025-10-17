@@ -59,15 +59,9 @@
 		"openInNewTab": {
 			"type": "boolean"
 		},
-		"layout": {
+		"template": {
 			"type": "string",
-			"default": "list",
-			"enum": ["list", "card"]
-		},
-		"eventDisplayPreset": {
-			"type": "string",
-			"default": "default",
-			"enum": ["default", "compact", "badge", "card", "timeline", "minimal"]
+			"default": "list"
 		}
 	},
 	"editorScript": "file:./index.js",

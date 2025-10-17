@@ -15,6 +15,7 @@ import {
 import { useSelect } from '@wordpress/data';
 import { megaphone } from '@wordpress/icons';
 import { useEntityRecords } from '@wordpress/core-data';
+import { useState, useEffect } from '@wordpress/element';
 
 const Edit = ({ attributes, setAttributes }) => {
 	const {
@@ -29,11 +30,31 @@ const Edit = ({ attributes, setAttributes }) => {
 		excerptLength,
 		forceLinkOverride,
 		openInNewTab,
-		layout,
-		eventDisplayPreset
+		template
 	} = attributes;
 
+	const [availableTemplates, setAvailableTemplates] = useState([
+		{ label: __('リスト', 'andw-notices'), value: 'list' },
+		{ label: __('カード', 'andw-notices'), value: 'card' }
+	]);
+
 	const blockProps = useBlockProps();
+
+	// テンプレート一覧を取得
+	useEffect(() => {
+		wp.apiFetch({
+			path: '/wp/v2/andw-notices/templates'
+		}).then((templates) => {
+			const templateOptions = Object.keys(templates).map(key => ({
+				label: templates[key].name,
+				value: key
+			}));
+			setAvailableTemplates(templateOptions);
+		}).catch(() => {
+			// エラー時はデフォルトテンプレートを使用
+			console.warn('Could not load templates, using defaults');
+		});
+	}, []);
 
 	// お知らせ投稿を取得（シンプルクエリでREST APIエラー回避）
 	const { records: notices, isResolving } = useEntityRecords('postType', 'notices', {
@@ -112,27 +133,11 @@ const Edit = ({ attributes, setAttributes }) => {
 						onChange={(value) => setAttributes({ orderby: value })}
 					/>
 					<SelectControl
-						label={__('レイアウト', 'andw-notices')}
-						value={layout}
-						options={[
-							{ label: __('リスト', 'andw-notices'), value: 'list' },
-							{ label: __('カード', 'andw-notices'), value: 'card' }
-						]}
-						onChange={(value) => setAttributes({ layout: value })}
-					/>
-					<SelectControl
-						label={__('イベント日付表示スタイル', 'andw-notices')}
-						value={eventDisplayPreset}
-						options={[
-							{ label: __('デフォルト', 'andw-notices'), value: 'default' },
-							{ label: __('コンパクト', 'andw-notices'), value: 'compact' },
-							{ label: __('バッジ', 'andw-notices'), value: 'badge' },
-							{ label: __('カード', 'andw-notices'), value: 'card' },
-							{ label: __('タイムライン', 'andw-notices'), value: 'timeline' },
-							{ label: __('ミニマル', 'andw-notices'), value: 'minimal' }
-						]}
-						onChange={(value) => setAttributes({ eventDisplayPreset: value })}
-						help={__('イベント日付の表示スタイルを選択してください', 'andw-notices')}
+						label={__('表示テンプレート', 'andw-notices')}
+						value={template}
+						options={availableTemplates}
+						onChange={(value) => setAttributes({ template: value })}
+						help={__('お知らせアイテムの表示テンプレートを選択してください', 'andw-notices')}
 					/>
 				</PanelBody>
 
@@ -212,7 +217,7 @@ const Edit = ({ attributes, setAttributes }) => {
 					)}
 
 					{!isResolving && (
-						<ul className={`andw-notices andw-notices-${layout}`}>
+						<ul className={`andw-notices andw-notices-${template}`}>
 							{displayNotices.slice(0, count).map((notice) => (
 								<li key={notice.id} className="andw-notice-item">
 									{showDate && (
