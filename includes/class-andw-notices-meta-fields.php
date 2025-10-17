@@ -109,24 +109,13 @@ class ANDW_Notices_Meta_Fields {
 				}
 				.andw-post-select {
 					width: 100%;
-					min-height: 200px;
-					max-height: 300px;
-					overflow-y: auto;
-					border: 1px solid #8c8f94;
-					border-radius: 4px;
-					background-color: #fff;
-				}
-				.andw-post-select option {
-					padding: 8px 12px;
-					line-height: 1.4;
-				}
-				.andw-post-select option:hover,
-				.andw-post-select option:focus {
-					background-color: #2271b1;
-					color: #fff;
+					margin-top: 4px;
 				}
 				.andw-post-select option[style*="display: none"] {
 					display: none !important;
+				}
+				.andw-search-input:focus + .andw-post-select {
+					border-color: #2271b1;
 				}
 			' );
 
@@ -212,22 +201,36 @@ class ANDW_Notices_Meta_Fields {
 							var searchTerm = $(this).val().toLowerCase();
 							console.log("ANDW Notices: 検索語:", searchTerm);
 
+							var visibleCount = 0;
+
 							// 全てのオプションをチェック
-							$options.each(function() {
+							$options.each(function(index) {
 								var $option = $(this);
 								var searchText = $option.data("search-text") || "";
+
+								if (index === 0) {
+									// 最初のオプション（空値）は常に表示
+									$option.show();
+									return;
+								}
 
 								if (searchTerm === "" || searchText.indexOf(searchTerm) !== -1) {
 									// マッチする場合は表示
 									$option.show();
+									visibleCount++;
 								} else {
 									// マッチしない場合は非表示
 									$option.hide();
 								}
 							});
 
-							// 空のオプションは常に表示
-							$options.first().show();
+							// 検索結果数を表示
+							var $resultsCount = $("#andw_search_results_count");
+							if (searchTerm === "") {
+								$resultsCount.hide();
+							} else {
+								$resultsCount.text(visibleCount + "件の結果").show();
+							}
 						});
 
 						// セレクトボックスの選択イベント
@@ -354,12 +357,12 @@ class ANDW_Notices_Meta_Fields {
 							   id="andw_notices_search_input"
 							   placeholder="タイトルまたはスラッグで検索..."
 							   class="regular-text andw-search-input" />
+						<small id="andw_search_results_count" class="description" style="display: none; margin-top: 4px; color: #646970;"></small>
 
 						<!-- セレクトボックス -->
 						<select name="andw_notices_target_post_id"
 								id="andw_notices_target_post_id"
-								class="regular-text andw-post-select"
-								size="8">
+								class="regular-text andw-post-select">
 							<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
 							<?php foreach ( $posts_and_pages as $post_item ) :
 								$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
