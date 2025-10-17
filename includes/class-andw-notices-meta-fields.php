@@ -65,7 +65,10 @@ class ANDW_Notices_Meta_Fields {
 					display: none !important;
 				}
 				.link-type-field.show {
-					display: table-row !important;
+					display: block !important;
+					visibility: visible !important;
+					height: auto !important;
+					opacity: 1 !important;
 				}
 			' );
 
@@ -103,12 +106,25 @@ class ANDW_Notices_Meta_Fields {
 
 							// 強制的に表示（CSS競合対策）
 							$targetElement.addClass("show").css({
-								"display": "table-row",
-								"visibility": "visible"
+								"display": "block",
+								"visibility": "visible",
+								"height": "auto",
+								"opacity": "1"
 							}).show();
 
 							console.log("ANDW Notices: 表示後のスタイル:", $targetElement.attr("style"));
 							console.log("ANDW Notices: クラス:", $targetElement.attr("class"));
+
+							// 最終手段：親要素も確認・修正
+							$targetElement.parents("tr").show();
+
+							// 代替表示方法をテスト
+							setTimeout(function() {
+								if (!$targetElement.is(":visible")) {
+									console.log("ANDW Notices: 標準方法で表示されないため、代替方法を試行");
+									$targetElement.removeAttr("style").removeClass().addClass("show").attr("style", "display:block!important;visibility:visible!important;");
+								}
+							}, 200);
 						}
 					}
 
