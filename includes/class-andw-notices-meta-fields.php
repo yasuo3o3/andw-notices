@@ -59,8 +59,12 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
 
+			// Select2 for searchable dropdowns
+			wp_enqueue_script( 'select2' );
+			wp_enqueue_style( 'select2' );
+
 			// Add cache-busting version
-			$script_version = '1.0.1-' . time();
+			$script_version = '1.0.2-' . time();
 
 			// CSS for meta box styling
 			wp_add_inline_style( 'jquery-ui-datepicker', '
@@ -81,6 +85,17 @@ class ANDW_Notices_Meta_Fields {
 				#link-type-external.show {
 					display: table-row !important;
 					visibility: visible !important;
+				}
+				.select2-container {
+					max-width: 100%;
+				}
+				.select2-container--default .select2-selection--single {
+					height: 30px;
+					line-height: 28px;
+				}
+				.select2-container--default .select2-selection--single .select2-selection__rendered {
+					padding-left: 8px;
+					padding-right: 20px;
 				}
 			' );
 
@@ -153,11 +168,49 @@ class ANDW_Notices_Meta_Fields {
 					// ラジオボタンの変更イベント
 					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
 
+					// Select2初期化
+					function initSelect2() {
+						$("#andw_notices_target_post_id").select2({
+							placeholder: "タイトルまたはスラッグで検索...",
+							allowClear: true,
+							width: "100%",
+							language: {
+								noResults: function() {
+									return "該当する投稿・ページが見つかりません";
+								},
+								searching: function() {
+									return "検索中...";
+								}
+							}
+						});
+					}
+
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
 						toggleLinkTypeFields();
+
+						// Select2初期化（internal選択時のみ）
+						if ($("input[name=\"andw_notices_link_type\"]:checked").val() === "internal") {
+							initSelect2();
+						}
+
 						console.log("ANDW Notices: 初期化完了");
 					}, 100);
+
+					// リンクタイプ変更時にSelect2を再初期化
+					$("input[name=\"andw_notices_link_type\"]").on("change", function() {
+						var linkType = $(this).val();
+
+						// 既存のSelect2を破棄
+						if ($("#andw_notices_target_post_id").hasClass("select2-hidden-accessible")) {
+							$("#andw_notices_target_post_id").select2("destroy");
+						}
+
+						// internalタイプの場合のみSelect2を再初期化
+						if (linkType === "internal") {
+							setTimeout(initSelect2, 100);
+						}
+					});
 				});
 				'
 			);
@@ -234,12 +287,19 @@ class ANDW_Notices_Meta_Fields {
 						'order'          => 'ASC'
 					) );
 					?>
-					<select name="andw_notices_target_post_id" id="andw_notices_target_post_id">
+					<select name="andw_notices_target_post_id" id="andw_notices_target_post_id" class="andw-notices-post-select">
 						<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
-						<?php foreach ( $posts_and_pages as $post_item ) : ?>
-							<option value="<?php echo esc_attr( $post_item->ID ); ?>" <?php selected( $target_post_id, $post_item->ID ); ?>>
+						<?php foreach ( $posts_and_pages as $post_item ) :
+							$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
+							$slug = $post_item->post_name;
+						?>
+							<option value="<?php echo esc_attr( $post_item->ID ); ?>"
+									<?php selected( $target_post_id, $post_item->ID ); ?>
+									data-slug="<?php echo esc_attr( $slug ); ?>"
+									data-type="<?php echo esc_attr( $post_type_label ); ?>">
 								<?php echo esc_html( $post_item->post_title ); ?>
-								(<?php echo $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' ); ?>)
+								(<?php echo esc_html( $post_type_label ); ?>)
+								- <?php echo esc_html( $slug ); ?>
 							</option>
 						<?php endforeach; ?>
 					</select>
