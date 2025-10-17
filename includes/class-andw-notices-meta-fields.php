@@ -60,7 +60,7 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style(
 				'jquery-ui-datepicker',
-				plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/jquery-ui-1.12.1.css',
+				plugins_url( 'assets/css/jquery-ui-1.12.1.css', ANDW_NOTICES_PLUGIN_FILE ),
 				array(),
 				'1.12.1'
 			);
@@ -73,14 +73,14 @@ class ANDW_Notices_Meta_Fields {
 				// Local Select2 resources (WordPress.org compliant)
 				wp_enqueue_script(
 					'select2-local',
-					plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/select2-4.1.0.min.js',
+					plugins_url( 'assets/js/select2-4.1.0.min.js', ANDW_NOTICES_PLUGIN_FILE ),
 					array( 'jquery' ),
 					'4.1.0',
 					true
 				);
 				wp_enqueue_style(
 					'select2-local',
-					plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/select2-4.1.0.min.css',
+					plugins_url( 'assets/css/select2-4.1.0.min.css', ANDW_NOTICES_PLUGIN_FILE ),
 					array(),
 					'4.1.0'
 				);
