@@ -156,6 +156,13 @@ class ANDW_Notices_Meta_Fields {
 					padding: 15px;
 					background-color: #f9f9f9;
 					border-radius: 4px;
+					/* フロントエンド用Flexレイアウトを無効化 */
+					display: block !important;
+					flex-direction: unset !important;
+					gap: unset !important;
+					align-items: unset !important;
+					justify-content: unset !important;
+					flex-wrap: unset !important;
 				}
 
 				/* ラジオボタン選択部分のスタイル */
