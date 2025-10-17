@@ -60,8 +60,26 @@ class ANDW_Notices_Meta_Fields {
 			wp_enqueue_script( 'jquery-ui-datepicker' );
 			wp_enqueue_style( 'jquery-ui-datepicker', 'https://code.jquery.com/ui/1.12.1/themes/ui-lightness/jquery-ui.css', array(), '1.12.1' );
 
-			// Basic jQuery UI for styling
-			wp_enqueue_style( 'wp-jquery-ui-dialog' );
+			// Select2 for searchable dropdowns - with fallback
+			if ( wp_script_is( 'select2', 'registered' ) ) {
+				wp_enqueue_script( 'select2' );
+				wp_enqueue_style( 'select2' );
+			} else {
+				// Fallback to CDN if WordPress Select2 is not available
+				wp_enqueue_script(
+					'select2-cdn',
+					'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
+					array( 'jquery' ),
+					'4.1.0',
+					true
+				);
+				wp_enqueue_style(
+					'select2-cdn',
+					'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css',
+					array(),
+					'4.1.0'
+				);
+			}
 
 			// Add cache-busting version
 			$script_version = '1.0.2-' . time();
@@ -98,24 +116,38 @@ class ANDW_Notices_Meta_Fields {
 					padding-right: 20px;
 				}
 
-				/* 検索可能セレクト専用スタイル */
-				.andw-searchable-select-container {
-					max-width: 100%;
+				/* Select2統合型検索セレクト専用スタイル */
+				.andw-notices-select2 {
+					width: 100% !important;
 				}
-				.andw-search-input {
-					margin-bottom: 8px;
-					width: 100%;
-					box-sizing: border-box;
+				.select2-container--default .select2-selection--single {
+					height: 32px;
+					line-height: 30px;
+					border: 1px solid #8c8f94;
+					border-radius: 4px;
 				}
-				.andw-post-select {
-					width: 100%;
-					margin-top: 4px;
+				.select2-container--default .select2-selection--single .select2-selection__rendered {
+					padding-left: 8px;
+					padding-right: 20px;
+					color: #50575e;
 				}
-				.andw-post-select option[style*="display: none"] {
-					display: none !important;
+				.select2-container--default .select2-selection--single .select2-selection__arrow {
+					height: 30px;
+					right: 6px;
 				}
-				.andw-search-input:focus + .andw-post-select {
-					border-color: #2271b1;
+				.select2-dropdown {
+					border: 1px solid #8c8f94;
+					border-radius: 4px;
+					box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+				}
+				.select2-search--dropdown .select2-search__field {
+					border: 1px solid #8c8f94;
+					border-radius: 4px;
+					padding: 6px 8px;
+				}
+				.select2-container--default .select2-results__option--highlighted[aria-selected] {
+					background-color: #2271b1;
+					color: #fff;
 				}
 			' );
 
@@ -188,79 +220,104 @@ class ANDW_Notices_Meta_Fields {
 					// ラジオボタンの変更イベント
 					$("input[name=\"andw_notices_link_type\"]").on("change", toggleLinkTypeFields);
 
-					// 検索可能セレクトの処理
-					function initSearchableSelect() {
-						console.log("ANDW Notices: 検索可能セレクト初期化開始");
+					// Select2統合型検索セレクトの初期化
+					function initSelect2() {
+						console.log("ANDW Notices: Select2初期化開始");
 
-						var $searchInput = $("#andw_notices_search_input");
+						// Select2の利用可能性をチェック
+						if (typeof $.fn.select2 === "undefined") {
+							console.warn("ANDW Notices: Select2が利用できません。通常のセレクトボックスとして動作します。");
+							return;
+						}
+
 						var $select = $("#andw_notices_target_post_id");
-						var $options = $select.find("option");
 
-						// 検索入力のイベント
-						$searchInput.on("input", function() {
-							var searchTerm = $(this).val().toLowerCase();
-							console.log("ANDW Notices: 検索語:", searchTerm);
-
-							var visibleCount = 0;
-
-							// 全てのオプションをチェック
-							$options.each(function(index) {
-								var $option = $(this);
-								var searchText = $option.data("search-text") || "";
-
-								if (index === 0) {
-									// 最初のオプション（空値）は常に表示
-									$option.show();
-									return;
+						// Select2で初期化
+						$select.select2({
+							placeholder: "投稿・ページを選択または検索...",
+							allowClear: true,
+							width: "100%",
+							dropdownAutoWidth: false,
+							language: {
+								noResults: function() {
+									return "該当する投稿・ページが見つかりません";
+								},
+								searching: function() {
+									return "検索中...";
+								},
+								inputTooShort: function(args) {
+									return "文字を入力して検索してください";
+								},
+								loadingMore: function() {
+									return "読み込み中...";
+								}
+							},
+							matcher: function(params, data) {
+								// 検索語が空の場合は全て表示
+								if ($.trim(params.term) === "") {
+									return data;
 								}
 
-								if (searchTerm === "" || searchText.indexOf(searchTerm) !== -1) {
-									// マッチする場合は表示
-									$option.show();
-									visibleCount++;
-								} else {
-									// マッチしない場合は非表示
-									$option.hide();
-								}
-							});
+								// 検索語を小文字に変換
+								var term = params.term.toLowerCase();
 
-							// 検索結果数を表示
-							var $resultsCount = $("#andw_search_results_count");
-							if (searchTerm === "") {
-								$resultsCount.hide();
-							} else {
-								$resultsCount.text(visibleCount + "件の結果").show();
+								// オプションのテキストを取得
+								var text = (data.text || "").toLowerCase();
+
+								// data属性からも検索
+								var $option = $("option[value=\"" + data.id + "\"]", $select);
+								var postTitle = ($option.data("post-title") || "").toLowerCase();
+								var postSlug = ($option.data("post-slug") || "").toLowerCase();
+								var postType = ($option.data("post-type") || "").toLowerCase();
+								var searchText = ($option.data("search-text") || "").toLowerCase();
+
+								// いずれかにマッチするかチェック
+								if (text.indexOf(term) > -1 ||
+									postTitle.indexOf(term) > -1 ||
+									postSlug.indexOf(term) > -1 ||
+									postType.indexOf(term) > -1 ||
+									searchText.indexOf(term) > -1) {
+									return data;
+								}
+
+								return null;
 							}
 						});
 
-						// セレクトボックスの選択イベント
-						$select.on("change", function() {
-							var selectedValue = $(this).val();
-							console.log("ANDW Notices: 選択されたID:", selectedValue);
+						// 選択イベント
+						$select.on("select2:select", function(e) {
+							var selectedValue = e.params.data.id;
+							console.log("ANDW Notices: Select2で選択されたID:", selectedValue);
 						});
 
-						console.log("ANDW Notices: 検索可能セレクト初期化完了");
+						console.log("ANDW Notices: Select2初期化完了");
 					}
 
 					// 初期表示（少し遅延させて確実に実行）
 					setTimeout(function() {
 						toggleLinkTypeFields();
 
-						// 検索可能セレクト初期化（internal選択時のみ）
+						// Select2初期化（internal選択時のみ）
 						if ($("input[name=\"andw_notices_link_type\"]:checked").val() === "internal") {
-							initSearchableSelect();
+							initSelect2();
 						}
 
 						console.log("ANDW Notices: 初期化完了");
 					}, 100);
 
-					// リンクタイプ変更時に検索可能セレクトを再初期化
+					// リンクタイプ変更時にSelect2を再初期化
 					$("input[name=\"andw_notices_link_type\"]").on("change", function() {
 						var linkType = $(this).val();
 
-						// internalタイプの場合のみ検索可能セレクト初期化
+						// 既存のSelect2を破棄
+						var $select = $("#andw_notices_target_post_id");
+						if ($select.hasClass("select2-hidden-accessible")) {
+							$select.select2("destroy");
+						}
+
+						// internalタイプの場合のみSelect2初期化
 						if (linkType === "internal") {
-							setTimeout(initSearchableSelect, 100);
+							setTimeout(initSelect2, 100);
 						}
 					});
 				});
@@ -350,35 +407,28 @@ class ANDW_Notices_Meta_Fields {
 					}
 					?>
 
-					<!-- 検索可能セレクトボックス -->
-					<div class="andw-searchable-select-container">
-						<!-- 検索入力欄 -->
-						<input type="text"
-							   id="andw_notices_search_input"
-							   placeholder="タイトルまたはスラッグで検索..."
-							   class="regular-text andw-search-input" />
-						<small id="andw_search_results_count" class="description" style="display: none; margin-top: 4px; color: #646970;"></small>
-
-						<!-- セレクトボックス -->
-						<select name="andw_notices_target_post_id"
-								id="andw_notices_target_post_id"
-								class="regular-text andw-post-select">
-							<option value=""><?php esc_html_e( '投稿・ページを選択', 'andw-notices' ); ?></option>
-							<?php foreach ( $posts_and_pages as $post_item ) :
-								$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
-								$display_text = $post_item->post_title . ' (' . $post_type_label . ') - ' . $post_item->post_name;
-							?>
-								<option value="<?php echo esc_attr( $post_item->ID ); ?>"
-										<?php selected( $target_post_id, $post_item->ID ); ?>
-										data-search-text="<?php echo esc_attr( strtolower( $display_text ) ); ?>">
-									<?php echo esc_html( $display_text ); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-					</div>
+					<!-- Select2統合型検索セレクトボックス -->
+					<select name="andw_notices_target_post_id"
+							id="andw_notices_target_post_id"
+							class="regular-text andw-notices-select2">
+						<option value=""><?php esc_html_e( '投稿・ページを選択または検索...', 'andw-notices' ); ?></option>
+						<?php foreach ( $posts_and_pages as $post_item ) :
+							$post_type_label = $post_item->post_type === 'page' ? __( '固定ページ', 'andw-notices' ) : __( '投稿', 'andw-notices' );
+							$display_text = $post_item->post_title . ' (' . $post_type_label . ') - ' . $post_item->post_name;
+						?>
+							<option value="<?php echo esc_attr( $post_item->ID ); ?>"
+									<?php selected( $target_post_id, $post_item->ID ); ?>
+									data-search-text="<?php echo esc_attr( strtolower( $display_text ) ); ?>"
+									data-post-title="<?php echo esc_attr( $post_item->post_title ); ?>"
+									data-post-slug="<?php echo esc_attr( $post_item->post_name ); ?>"
+									data-post-type="<?php echo esc_attr( $post_type_label ); ?>">
+								<?php echo esc_html( $display_text ); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
 
 					<p class="description">
-						<?php esc_html_e( '上の検索ボックスでタイトルまたはスラッグを入力してフィルタし、下のリストから選択してください。', 'andw-notices' ); ?>
+						<?php esc_html_e( 'セレクトボックスをクリックして投稿・ページを選択するか、タイトル・スラッグで検索してください。', 'andw-notices' ); ?>
 					</p>
 				</td>
 			</tr>
