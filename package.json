@@ -1,0 +1,30 @@
+{
+  "name": "andw-notices",
+  "version": "0.0.1",
+  "description": "ANDW 新着お知らせ (ANDW Notices) - WordPress plugin for managing news and announcements",
+  "main": "andw-notices.php",
+  "scripts": {
+    "build": "wp-scripts build",
+    "dev": "wp-scripts start",
+    "lint:css": "wp-scripts lint-style",
+    "lint:js": "wp-scripts lint-js",
+    "packages-update": "wp-scripts packages-update"
+  },
+  "keywords": [
+    "wordpress",
+    "plugin",
+    "notices",
+    "news",
+    "announcements"
+  ],
+  "author": "yasuo3o3",
+  "license": "GPL-2.0-or-later",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@wordpress/icons": "^10.32.0",
+    "@wordpress/scripts": "^26.19.0"
+  }
+}

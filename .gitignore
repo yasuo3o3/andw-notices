@@ -37,8 +37,6 @@ local.properties
 vendor/
 composer.lock
 node_modules/
-package.json
-package-lock.json
 yarn.lock
 jspm_packages/
 
