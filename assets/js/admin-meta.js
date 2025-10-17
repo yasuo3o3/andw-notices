@@ -84,13 +84,50 @@ jQuery(document).ready(function($) {
 	// リンクタイプフィールドの表示切替
 	function toggleLinkTypeFields() {
 		var linkType = $("input[name=\"andw_notices_link_type\"]:checked").val();
+		console.log("ANDW Notices: リンクタイプ変更:", linkType);
 
-		$(".link-type-field").hide();
+		// すべてのリンクタイプフィールドを非表示
+		$(".link-type-field").removeClass("show").hide();
 
-		if (linkType === "internal") {
-			$("#link-type-internal").show();
-		} else if (linkType === "external") {
-			$("#link-type-external").show();
+		// 新規タブのデフォルト状態を設定（ユーザーが手動で変更していない場合のみ）
+		var $targetBlankCheckbox = $("#andw_notices_target_blank");
+		var isUserModified = $targetBlankCheckbox.data("user-modified");
+
+		if (!isUserModified) {
+			if (linkType === "external") {
+				// 外部URLの場合はデフォルトでチェック
+				$targetBlankCheckbox.prop("checked", true);
+				console.log("ANDW Notices: 外部URLのため新規タブをON");
+			} else if (linkType === "self" || linkType === "internal") {
+				// 内部ページの場合はデフォルトでチェック解除
+				$targetBlankCheckbox.prop("checked", false);
+				console.log("ANDW Notices: 内部ページのため新規タブをOFF");
+			}
+		}
+
+		// 選択されたタイプのフィールドを確実に表示
+		if (linkType) {
+			var targetId = "#link-type-" + linkType;
+			var $targetElement = $(targetId);
+			console.log("ANDW Notices: 表示する要素:", targetId);
+
+			// 強制的に表示（CSS競合対策）
+			$targetElement.addClass("show").css({
+				"display": "table-row",
+				"visibility": "visible",
+				"height": "auto",
+				"opacity": "1"
+			}).show();
+
+			console.log("ANDW Notices: 表示後のスタイル:", $targetElement.attr("style"));
+
+			// 代替表示方法（フォールバック）
+			setTimeout(function() {
+				if (!$targetElement.is(":visible")) {
+					console.log("ANDW Notices: 標準方法で表示されないため、代替方法を試行");
+					$targetElement.attr("style", "display:table-row!important;visibility:visible!important;height:auto!important;opacity:1!important;");
+				}
+			}, 100);
 		}
 	}
 
@@ -145,7 +182,7 @@ jQuery(document).ready(function($) {
 		$("#event-preview").text(previewText || "プレビューなし");
 	}
 
-	// 新規タブ設定の自動制御
+	// 新規タブ設定の手動変更を追跡
 	$("#andw_notices_target_blank").on("change", function() {
 		$(this).data("user-modified", true);
 		console.log("ANDW Notices: ユーザーが新規タブ設定を手動で変更しました");
