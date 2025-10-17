@@ -228,6 +228,14 @@ class ANDW_Notices_Post_Type {
 			return '';
 		}
 
+		// 投稿固有のプリセット設定を取得（オプションが指定されていない場合）
+		if ( empty( $options ) || ( empty( $options['preset'] ) && ! isset( $options['style'] ) ) ) {
+			$saved_preset = get_post_meta( $post_id, 'andw_notices_display_preset', true );
+			if ( ! empty( $saved_preset ) && 'default' !== $saved_preset ) {
+				$options['preset'] = $saved_preset;
+			}
+		}
+
 		// デフォルトオプション
 		$default_options = array(
 			// 基本設定
@@ -580,6 +588,27 @@ class ANDW_Notices_Post_Type {
 				'description' => __( 'イベント日付HTML出力', 'andw-notices' ),
 				'type'        => 'string',
 				'context'     => array( 'view', 'edit' ),
+			),
+		) );
+
+		// 表示プリセットメタフィールド
+		register_rest_field( self::POST_TYPE, 'andw_display_preset', array(
+			'get_callback'    => function( $object ) {
+				return get_post_meta( $object['id'], 'andw_notices_display_preset', true ) ?: 'default';
+			},
+			'update_callback' => function( $value, $object ) {
+				if ( current_user_can( 'edit_post', $object->ID ) ) {
+					$allowed_presets = array( 'default', 'compact', 'badge', 'card', 'timeline', 'minimal' );
+					$preset = in_array( $value, $allowed_presets, true ) ? $value : 'default';
+					return update_post_meta( $object->ID, 'andw_notices_display_preset', $preset );
+				}
+				return false;
+			},
+			'schema'          => array(
+				'description' => __( '表示プリセット', 'andw-notices' ),
+				'type'        => 'string',
+				'context'     => array( 'view', 'edit' ),
+				'enum'        => array( 'default', 'compact', 'badge', 'card', 'timeline', 'minimal' ),
 			),
 		) );
 	}

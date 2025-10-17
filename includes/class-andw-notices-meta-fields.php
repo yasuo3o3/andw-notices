@@ -358,6 +358,113 @@ class ANDW_Notices_Meta_Fields {
 					// イベントタイプラジオボタンの変更イベント
 					$("input[name=\"andw_notices_event_type\"]").on("change", toggleEventFields);
 
+					// イベント表示プレビュー機能
+					function updateEventPreview() {
+						var eventType = $("input[name=\"andw_notices_event_type\"]:checked").val();
+						var eventLabel = $("#andw_notices_event_label").val();
+						var displayPreset = $("#andw_notices_display_preset").val();
+						var previewContainer = $("#event-preview");
+
+						// イベント日付なしの場合
+						if (eventType === "none" || !eventType) {
+							previewContainer.html("<em>イベント日付が設定されていません</em>");
+							return;
+						}
+
+						// データを取得
+						var eventData = {
+							type: eventType,
+							label: eventLabel || "イベント",
+							single_date: $("#andw_notices_event_single_date").val() || "2024-03-15",
+							start_date: $("#andw_notices_event_start_date").val() || "2024-03-15",
+							end_date: $("#andw_notices_event_end_date").val() || "2024-03-20",
+							free_text: $("#andw_notices_event_free_text").val() || "近日公開"
+						};
+
+						// プレビューHTMLを生成
+						var previewHtml = generatePreviewHtml(eventData, displayPreset);
+						previewContainer.html(previewHtml);
+					}
+
+					function generatePreviewHtml(eventData, preset) {
+						var dateContent = "";
+						var separator = "：";
+						var containerClass = "andw_notices_event";
+						var priority = "label-first";
+
+						// プリセット別の設定
+						switch (preset) {
+							case "compact":
+								containerClass += " compact";
+								separator = " ";
+								break;
+							case "badge":
+								containerClass += " badge";
+								separator = "";
+								priority = "date-first";
+								break;
+							case "card":
+								containerClass += " card";
+								break;
+							case "timeline":
+								containerClass += " timeline";
+								priority = "date-first";
+								break;
+							case "minimal":
+								containerClass += " minimal";
+								separator = "";
+								eventData.label = ""; // ラベルを非表示
+								break;
+						}
+
+						// 日付コンテンツの生成
+						switch (eventData.type) {
+							case "single":
+								dateContent = eventData.single_date ? "2024年3月15日" : "";
+								break;
+							case "period":
+								if (eventData.start_date && eventData.end_date) {
+									dateContent = "2024年3月15日 ～ 2024年3月20日";
+								} else if (eventData.start_date) {
+									dateContent = "2024年3月15日";
+								}
+								break;
+							case "text":
+								dateContent = eventData.free_text || "近日公開";
+								break;
+						}
+
+						// HTML生成
+						var labelHtml = eventData.label ?
+							"<span class=\"andw_notices_event_label\" data-component=\"label\">" +
+							eventData.label + separator + "</span>" : "";
+						var dateHtml = dateContent ?
+							"<span class=\"andw_notices_event_date\" data-component=\"date\">" +
+							dateContent + "</span>" : "";
+
+						var elements = [];
+						if (priority === "date-first") {
+							if (dateHtml) elements.push(dateHtml);
+							if (labelHtml) elements.push(labelHtml);
+						} else {
+							if (labelHtml) elements.push(labelHtml);
+							if (dateHtml) elements.push(dateHtml);
+						}
+
+						return "<div class=\"" + containerClass + "\" data-layout=\"horizontal\" data-style=\"" +
+							   preset + "\" data-priority=\"" + priority + "\" data-type=\"" + eventData.type + "\">" +
+							   elements.join("") + "</div>";
+					}
+
+					// プレビュー更新のイベントリスナー
+					$("#andw_notices_display_preset").on("change", updateEventPreview);
+					$("#andw_notices_event_label").on("input", updateEventPreview);
+					$("#andw_notices_event_single_date").on("change", updateEventPreview);
+					$("#andw_notices_event_start_date").on("change", updateEventPreview);
+					$("#andw_notices_event_end_date").on("change", updateEventPreview);
+					$("#andw_notices_event_free_text").on("input", updateEventPreview);
+					$("input[name=\"andw_notices_event_type\"]").on("change", updateEventPreview);
+
 					// リンクタイプ選択の処理
 					function toggleLinkTypeFields() {
 						var $selectedRadio = $("input[name=\"andw_notices_link_type\"]:checked");
@@ -517,6 +624,7 @@ class ANDW_Notices_Meta_Fields {
 
 						toggleEventFields();
 						toggleLinkTypeFields();
+						updateEventPreview(); // 初期プレビューを表示
 
 						// Select2初期化（internal選択時のみ）
 						if ($("input[name=\"andw_notices_link_type\"]:checked").val() === "internal") {
@@ -560,6 +668,7 @@ class ANDW_Notices_Meta_Fields {
 		wp_nonce_field( 'andw_notices_meta_nonce', 'andw_notices_meta_nonce' );
 
 		$event_data = get_post_meta( $post->ID, self::META_PREFIX . 'event_data', true );
+		$display_preset = get_post_meta( $post->ID, self::META_PREFIX . 'display_preset', true );
 		$link_type = get_post_meta( $post->ID, self::META_PREFIX . 'link_type', true );
 		$target_post_id = get_post_meta( $post->ID, self::META_PREFIX . 'target_post_id', true );
 		$external_url = get_post_meta( $post->ID, self::META_PREFIX . 'external_url', true );
@@ -575,6 +684,11 @@ class ANDW_Notices_Meta_Fields {
 				'end_date' => '',
 				'free_text' => ''
 			);
+		}
+
+		// 表示プリセットのデフォルト値
+		if ( empty( $display_preset ) ) {
+			$display_preset = 'default';
 		}
 
 		// デフォルト値
@@ -770,6 +884,33 @@ class ANDW_Notices_Meta_Fields {
 								   placeholder="<?php esc_attr_e( '例：2024年春頃、近日公開、など', 'andw-notices' ); ?>"
 								   class="regular-text" />
 						</div>
+
+						<!-- 表示スタイル設定 -->
+						<div id="event-display-settings" class="event-field" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #ddd;">
+							<h4><?php esc_html_e( '表示スタイル', 'andw-notices' ); ?></h4>
+							<label for="andw_notices_display_preset">
+								<?php esc_html_e( 'プリセット', 'andw-notices' ); ?>
+							</label><br />
+							<select id="andw_notices_display_preset" name="andw_notices_display_preset" class="regular-text">
+								<option value="default" <?php selected( $display_preset, 'default' ); ?>><?php esc_html_e( '標準', 'andw-notices' ); ?></option>
+								<option value="compact" <?php selected( $display_preset, 'compact' ); ?>><?php esc_html_e( 'コンパクト', 'andw-notices' ); ?></option>
+								<option value="badge" <?php selected( $display_preset, 'badge' ); ?>><?php esc_html_e( 'バッジ', 'andw-notices' ); ?></option>
+								<option value="card" <?php selected( $display_preset, 'card' ); ?>><?php esc_html_e( 'カード', 'andw-notices' ); ?></option>
+								<option value="timeline" <?php selected( $display_preset, 'timeline' ); ?>><?php esc_html_e( 'タイムライン', 'andw-notices' ); ?></option>
+								<option value="minimal" <?php selected( $display_preset, 'minimal' ); ?>><?php esc_html_e( '最小表示', 'andw-notices' ); ?></option>
+							</select>
+							<p class="description">
+								<?php esc_html_e( 'イベント日付の表示スタイルを選択してください。', 'andw-notices' ); ?>
+							</p>
+
+							<!-- プレビューエリア -->
+							<div id="event-preview-container" style="margin-top: 15px;">
+								<h5><?php esc_html_e( 'プレビュー', 'andw-notices' ); ?></h5>
+								<div id="event-preview" style="padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; min-height: 40px;">
+									<?php esc_html_e( 'イベント日付を設定するとプレビューが表示されます', 'andw-notices' ); ?>
+								</div>
+							</div>
+						</div>
 					</div>
 				</td>
 			</tr>
@@ -843,6 +984,13 @@ class ANDW_Notices_Meta_Fields {
 
 		update_post_meta( $post_id, self::META_PREFIX . 'event_data', $event_data );
 
+		// 表示プリセットの保存
+		if ( isset( $_POST['andw_notices_display_preset'] ) ) {
+			$display_preset = sanitize_text_field( wp_unslash( $_POST['andw_notices_display_preset'] ) );
+			$display_preset = self::validate_display_preset( $display_preset );
+			update_post_meta( $post_id, self::META_PREFIX . 'display_preset', $display_preset );
+		}
+
 		// リンクタイプの保存
 		if ( isset( $_POST['andw_notices_link_type'] ) ) {
 			$link_type = sanitize_text_field( wp_unslash( $_POST['andw_notices_link_type'] ) );
@@ -882,6 +1030,17 @@ class ANDW_Notices_Meta_Fields {
 	private static function validate_event_type( $event_type ) {
 		$allowed_types = array( 'none', 'single', 'period', 'text' );
 		return in_array( $event_type, $allowed_types, true ) ? $event_type : 'none';
+	}
+
+	/**
+	 * 表示プリセットの検証
+	 *
+	 * @param string $display_preset 表示プリセット
+	 * @return string 検証済み表示プリセット
+	 */
+	private static function validate_display_preset( $display_preset ) {
+		$allowed_presets = array( 'default', 'compact', 'badge', 'card', 'timeline', 'minimal' );
+		return in_array( $display_preset, $allowed_presets, true ) ? $display_preset : 'default';
 	}
 
 	/**
