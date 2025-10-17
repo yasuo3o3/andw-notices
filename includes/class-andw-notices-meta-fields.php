@@ -157,13 +157,42 @@ class ANDW_Notices_Meta_Fields {
 					background-color: #f9f9f9;
 					border-radius: 4px;
 				}
+				.andw_notices_event fieldset {
+					border: none;
+					padding: 0;
+					margin: 0 0 15px 0;
+				}
+				.andw_notices_event fieldset legend {
+					padding: 0;
+					margin: 0;
+				}
+				.andw_notices_event fieldset label {
+					display: block;
+					margin: 5px 0;
+					font-weight: normal;
+				}
 				.event-field {
-					padding: 10px 0;
+					padding: 15px 0 10px 0;
 					border-top: 1px solid #eee;
+					margin-top: 10px;
 				}
 				.event-field:first-child {
 					border-top: none;
 					padding-top: 0;
+					margin-top: 0;
+				}
+				.event-field label {
+					font-weight: 600;
+					margin-bottom: 5px;
+					display: block;
+				}
+				.event-field input[type="text"] {
+					margin-top: 5px;
+				}
+				.event-field .description {
+					margin-top: 5px;
+					color: #666;
+					font-style: italic;
 				}
 
 				/* フロントエンド用イベント日付スタイル基盤 */
