@@ -157,6 +157,30 @@ class ANDW_Notices_Meta_Fields {
 					background-color: #f9f9f9;
 					border-radius: 4px;
 				}
+
+				/* ラジオボタン選択部分のスタイル */
+				.event-type-selection {
+					margin-bottom: 20px;
+					padding-bottom: 15px;
+					border-bottom: 1px solid #ddd;
+				}
+				.event-type-selection fieldset {
+					border: none;
+					padding: 0;
+					margin: 0;
+				}
+				.event-type-selection fieldset legend {
+					padding: 0;
+					margin: 0;
+				}
+				.event-type-selection fieldset label {
+					display: inline-block;
+					margin: 5px 15px 5px 0;
+					font-weight: normal;
+					white-space: nowrap;
+				}
+
+				/* 入力フィールド部分のスタイル */
 				.andw_notices_event fieldset {
 					border: none;
 					padding: 0;
@@ -193,6 +217,14 @@ class ANDW_Notices_Meta_Fields {
 					margin-top: 5px;
 					color: #666;
 					font-style: italic;
+				}
+
+				/* レスポンシブ対応 */
+				@media (max-width: 768px) {
+					.event-type-selection fieldset label {
+						display: block;
+						margin: 5px 0;
+					}
 				}
 
 				/* フロントエンド用イベント日付スタイル基盤 */
@@ -847,25 +879,30 @@ class ANDW_Notices_Meta_Fields {
 				<th scope="row"><?php esc_html_e( 'イベント日付', 'andw-notices' ); ?></th>
 				<td>
 					<div class="andw_notices_event">
-						<fieldset>
-							<legend class="screen-reader-text"><?php esc_html_e( 'イベント日付の種類', 'andw-notices' ); ?></legend>
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="none" <?php checked( $event_data['type'], 'none' ); ?> />
-								<?php esc_html_e( 'イベント日付なし', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="single" <?php checked( $event_data['type'], 'single' ); ?> />
-								<?php esc_html_e( '単一日付', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="period" <?php checked( $event_data['type'], 'period' ); ?> />
-								<?php esc_html_e( '期間', 'andw-notices' ); ?>
-							</label><br />
-							<label>
-								<input type="radio" name="andw_notices_event_type" value="text" <?php checked( $event_data['type'], 'text' ); ?> />
-								<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
-							</label>
-						</fieldset>
+						<!-- ラジオボタン選択部分 -->
+						<div class="event-type-selection">
+							<fieldset>
+								<legend class="screen-reader-text"><?php esc_html_e( 'イベント日付の種類', 'andw-notices' ); ?></legend>
+								<label>
+									<input type="radio" name="andw_notices_event_type" value="none" <?php checked( $event_data['type'], 'none' ); ?> />
+									<?php esc_html_e( 'イベント日付なし', 'andw-notices' ); ?>
+								</label><br />
+								<label>
+									<input type="radio" name="andw_notices_event_type" value="single" <?php checked( $event_data['type'], 'single' ); ?> />
+									<?php esc_html_e( '単一日付', 'andw-notices' ); ?>
+								</label><br />
+								<label>
+									<input type="radio" name="andw_notices_event_type" value="period" <?php checked( $event_data['type'], 'period' ); ?> />
+									<?php esc_html_e( '期間', 'andw-notices' ); ?>
+								</label><br />
+								<label>
+									<input type="radio" name="andw_notices_event_type" value="text" <?php checked( $event_data['type'], 'text' ); ?> />
+									<?php esc_html_e( '自由記述', 'andw-notices' ); ?>
+								</label>
+							</fieldset>
+						</div>
+
+						<!-- 入力フィールド部分 -->
 
 						<!-- イベントラベル -->
 						<div id="event-label-field" class="event-field" style="margin-top: 15px; display: none;">
