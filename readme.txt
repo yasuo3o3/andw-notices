@@ -2,7 +2,7 @@
 Contributors: yasuo3o3
 Tags: notices, news, announcements, gutenberg
 Requires at least: 6.2
-Tested up to: 6.4
+Tested up to: 6.8
 Requires PHP: 7.4
 Stable tag: 0.0.2
 License: GPLv2 or later

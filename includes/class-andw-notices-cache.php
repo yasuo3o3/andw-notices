@@ -67,6 +67,13 @@ class ANDW_Notices_Cache {
 		$cache_key = self::generate_cache_key( $attributes );
 		$duration = self::get_cache_duration();
 
+		// 生成されたキーをオプションに記録（削除時のため）
+		$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+		$recorded_keys[] = $cache_key;
+		// 重複削除と上限設定（100キーまで）
+		$recorded_keys = array_unique( array_slice( $recorded_keys, -100 ) );
+		update_option( 'andw_notices_cache_keys', $recorded_keys, false );
+
 		// Object Cache API で保存
 		$object_cache_result = wp_cache_set( $cache_key, $content, self::CACHE_GROUP, $duration );
 
@@ -85,18 +92,28 @@ class ANDW_Notices_Cache {
 		if ( function_exists( 'wp_cache_flush_group' ) ) {
 			wp_cache_flush_group( self::CACHE_GROUP );
 		} else {
-			// フォールバック: 個別のキャッシュキーを削除
-			$cache_keys = array(
-				'notices_list_',
-				'notices_count_',
-				'notices_meta_'
-			);
-			foreach ( $cache_keys as $key_prefix ) {
-				// 可能な限りのキーパターンを削除
-				for ( $i = 0; $i < 100; $i++ ) {
-					wp_cache_delete( $key_prefix . $i, self::CACHE_GROUP );
-				}
+			// フォールバック: 記録されたキーを使用した確実な削除
+			$recorded_keys = get_option( 'andw_notices_cache_keys', array() );
+			foreach ( $recorded_keys as $cache_key ) {
+				// オブジェクトキャッシュから削除
+				wp_cache_delete( $cache_key, self::CACHE_GROUP );
+				// Transientからも削除
+				$transient_key = self::TRANSIENT_PREFIX . $cache_key;
+				delete_transient( $transient_key );
 			}
+
+			// 記録されたキーをクリア
+			delete_option( 'andw_notices_cache_keys' );
+
+			// 念のため、パターンマッチングでも削除
+			global $wpdb;
+			$wpdb->query(
+				$wpdb->prepare(
+					"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+					$wpdb->esc_like( '_transient_' . self::TRANSIENT_PREFIX ) . '%',
+					$wpdb->esc_like( '_transient_timeout_' . self::TRANSIENT_PREFIX ) . '%'
+				)
+			);
 		}
 
 		// Transient を検索して削除

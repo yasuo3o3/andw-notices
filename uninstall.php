@@ -57,6 +57,7 @@ function andw_notices_uninstall_cleanup() {
 	$options_to_delete = array(
 		'andw_notices_settings',
 		'andw_notices_templates',
+		'andw_notices_cache_keys',
 		'andw_notices_version',
 	);
 

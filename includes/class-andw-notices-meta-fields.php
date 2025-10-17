@@ -1155,12 +1155,12 @@ class ANDW_Notices_Meta_Fields {
 	}
 
 	/**
-	 * 外部URLの検証
+	 * 外部URLの検証（register_meta用公開メソッド）
 	 *
 	 * @param string $url URL
 	 * @return string 検証済みURL
 	 */
-	private static function validate_external_url( $url ) {
+	public static function validate_external_url( $url ) {
 		if ( empty( $url ) ) {
 			return '';
 		}
