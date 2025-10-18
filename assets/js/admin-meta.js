@@ -184,6 +184,12 @@ jQuery(document).ready(function($) {
 		var linkType = $("input[name=\"andw_notices_link_type\"]:checked").val();
 		console.log("ANDW Notices: リンクタイプ変更:", linkType);
 
+		// デバッグ情報：利用可能なリンクタイプフィールドを確認
+		console.log("ANDW Notices: 利用可能なlink-type-fieldクラスの要素:", $(".link-type-field").length);
+		$(".link-type-field").each(function(index, element) {
+			console.log("  " + (index + 1) + ":", $(element).attr("id"));
+		});
+
 		// すべてのリンクタイプフィールドを非表示
 		$(".link-type-field").removeClass("show").hide();
 
@@ -208,22 +214,44 @@ jQuery(document).ready(function($) {
 			var targetId = "#link-type-" + linkType;
 			var $targetElement = $(targetId);
 			console.log("ANDW Notices: 表示する要素:", targetId);
+			console.log("ANDW Notices: 要素の存在:", $targetElement.length > 0);
+
+			if ($targetElement.length === 0) {
+				console.warn("ANDW Notices: 要素が見つかりません:", targetId);
+				// すべてのIDに"link-type-"が含まれる要素を探す
+				$('[id*="link-type-"]').each(function() {
+					console.log("ANDW Notices: 発見された要素:", $(this).attr("id"));
+				});
+				return;
+			}
 
 			// 強制的に表示（CSS競合対策）
 			$targetElement.addClass("show").css({
-				"display": "table-row",
-				"visibility": "visible",
-				"height": "auto",
-				"opacity": "1"
+				"display": "table-row !important",
+				"visibility": "visible !important",
+				"height": "auto !important",
+				"opacity": "1 !important"
 			}).show();
 
 			console.log("ANDW Notices: 表示後のスタイル:", $targetElement.attr("style"));
+
+			// 内部ページの場合、Select2の初期化も実行
+			if (linkType === "internal") {
+				console.log("ANDW Notices: 内部ページ選択のためSelect2初期化を実行");
+				setTimeout(function() {
+					retrySelect2Init();
+				}, 200);
+			}
 
 			// 代替表示方法（フォールバック）
 			setTimeout(function() {
 				if (!$targetElement.is(":visible")) {
 					console.log("ANDW Notices: 標準方法で表示されないため、代替方法を試行");
 					$targetElement.attr("style", "display:table-row!important;visibility:visible!important;height:auto!important;opacity:1!important;");
+
+					// さらに強制的な方法
+					$targetElement.removeClass("hidden").removeClass("hide").removeClass("d-none");
+					$targetElement.parent().removeClass("hidden").removeClass("hide").removeClass("d-none");
 				}
 			}, 100);
 		}
@@ -587,21 +615,6 @@ jQuery(document).ready(function($) {
 		console.log("=== End Library Info ===");
 	}
 
-	// ページ読み込み完了時にライブラリ情報を確認
-	checkLibraryInfo();
-
-	// デバッグ用：コンソールからテスト実行可能にする
-	window.andwNoticesDebug = {
-		testWithDefaultMatcher: testWithDefaultMatcher,
-		checkLibraryInfo: checkLibraryInfo,
-		initSelect2: initSelect2
-	};
-
-	console.log("ANDW Notices: デバッグ機能が利用可能です");
-	console.log("  window.andwNoticesDebug.testWithDefaultMatcher() - デフォルトmatcherテスト");
-	console.log("  window.andwNoticesDebug.checkLibraryInfo() - ライブラリ情報確認");
-	console.log("  window.andwNoticesDebug.initSelect2() - Select2手動初期化");
-
 	// ===== フォールバック機能 =====
 
 	// Select2ライブラリの動的読み込み（フォールバック）
@@ -680,10 +693,26 @@ jQuery(document).ready(function($) {
 		}
 	}
 
-	// デバッグ機能にフォールバック関数を追加
-	window.andwNoticesDebug.tryLoadSelect2Fallback = tryLoadSelect2Fallback;
-	window.andwNoticesDebug.extractPluginUrl = extractPluginUrl;
+	// ページ読み込み完了時にライブラリ情報を確認
+	checkLibraryInfo();
 
-	console.log("ANDW Notices: フォールバック機能が利用可能です");
+	// デバッグ用：コンソールからテスト実行可能にする
+	window.andwNoticesDebug = {
+		testWithDefaultMatcher: testWithDefaultMatcher,
+		checkLibraryInfo: checkLibraryInfo,
+		initSelect2: initSelect2,
+		tryLoadSelect2Fallback: tryLoadSelect2Fallback,
+		extractPluginUrl: extractPluginUrl,
+		toggleLinkTypeFields: toggleLinkTypeFields,
+		retrySelect2Init: retrySelect2Init
+	};
+
+	console.log("ANDW Notices: デバッグ機能が利用可能です");
+	console.log("  window.andwNoticesDebug.testWithDefaultMatcher() - デフォルトmatcherテスト");
+	console.log("  window.andwNoticesDebug.checkLibraryInfo() - ライブラリ情報確認");
+	console.log("  window.andwNoticesDebug.initSelect2() - Select2手動初期化");
 	console.log("  window.andwNoticesDebug.tryLoadSelect2Fallback() - Select2手動読み込み");
+	console.log("  window.andwNoticesDebug.extractPluginUrl() - プラグインURL抽出");
+	console.log("  window.andwNoticesDebug.toggleLinkTypeFields() - フィールド表示切替");
+	console.log("  window.andwNoticesDebug.retrySelect2Init() - Select2初期化リトライ");
 });
