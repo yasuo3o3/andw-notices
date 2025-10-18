@@ -24,6 +24,30 @@ jQuery(document).ready(function($) {
 			return;
 		}
 
+		// Select2ライブラリの存在確認
+		if (typeof $.fn.select2 === 'undefined') {
+			console.error("ANDW Notices: Select2ライブラリが読み込まれていません");
+			return;
+		}
+
+		// 重複初期化チェック
+		if ($select.hasClass('select2-hidden-accessible')) {
+			console.warn("ANDW Notices: Select2は既に初期化されています。一度破棄してから再初期化します。");
+			try {
+				$select.select2('destroy');
+				console.log("ANDW Notices: 既存のSelect2インスタンスを破棄しました");
+			} catch (error) {
+				console.error("ANDW Notices: Select2破棄エラー:", error);
+			}
+		}
+
+		// 要素の状態をログ出力
+		console.log("ANDW Notices: Select2初期化前の要素状態:");
+		console.log("  要素の可視性:", $select.is(':visible'));
+		console.log("  要素の親要素:", $select.parent().attr('id'));
+		console.log("  オプション数:", $select.find('option').length);
+		console.log("  Select2バージョン:", $.fn.select2.defaults ? 'loaded' : 'unknown');
+
 		// Select2で初期化（エラーハンドリング付き）
 		try {
 			$select.select2({
@@ -45,10 +69,24 @@ jQuery(document).ready(function($) {
 						return "読み込み中...";
 					}
 				},
-				// 改善されたmatcher関数（data属性活用）
+				// デバッグ用フラグ（本番運用時はfalseに変更）
+				debugMode: true,
+
+				// 改善されたmatcher関数（data属性活用＋デバッグログ）
 				matcher: function(params, data) {
+					var debugLog = this.options.debugMode;
+
+					if (debugLog) {
+						console.log("=== ANDW Notices: Select2 Matcher Debug ===");
+						console.log("検索語:", params.term);
+						console.log("データ:", data);
+					}
+
 					// 検索語が空の場合は全て表示
 					if ($.trim(params.term) === "") {
+						if (debugLog) {
+							console.log("検索語が空のため全件表示");
+						}
 						return data;
 					}
 
@@ -61,19 +99,42 @@ jQuery(document).ready(function($) {
 					var searchText = "";
 
 					if (element) {
+						// data属性の取得
+						var searchTextAttr = $(element).data('search-text') || '';
+						var postTitleAttr = $(element).data('post-title') || '';
+						var postSlugAttr = $(element).data('post-slug') || '';
+
 						// data-search-text, data-post-title, data-post-slug属性も検索対象
 						searchText = (
-							($(element).data('search-text') || '') + ' ' +
-							($(element).data('post-title') || '') + ' ' +
-							($(element).data('post-slug') || '') + ' ' +
+							searchTextAttr + ' ' +
+							postTitleAttr + ' ' +
+							postSlugAttr + ' ' +
 							text
 						).toLowerCase();
+
+						if (debugLog) {
+							console.log("要素のdata属性:");
+							console.log("  search-text:", searchTextAttr);
+							console.log("  post-title:", postTitleAttr);
+							console.log("  post-slug:", postSlugAttr);
+							console.log("  element text:", text);
+							console.log("  結合後searchText:", searchText);
+						}
 					} else {
 						searchText = text;
+						if (debugLog) {
+							console.log("要素なし、textのみ:", text);
+						}
 					}
 
 					// 部分一致検索
-					if (searchText.indexOf(term) > -1) {
+					var isMatch = searchText.indexOf(term) > -1;
+					if (debugLog) {
+						console.log("マッチ結果:", isMatch);
+						console.log("=== End Matcher Debug ===");
+					}
+
+					if (isMatch) {
 						return data;
 					}
 
@@ -87,7 +148,28 @@ jQuery(document).ready(function($) {
 				console.log("ANDW Notices: Select2で選択されたID:", selectedValue);
 			});
 
+			// 初期化後の状態確認
 			console.log("ANDW Notices: Select2初期化完了");
+			console.log("ANDW Notices: 初期化後の要素状態:");
+			console.log("  Select2クラス:", $select.hasClass('select2-hidden-accessible'));
+			console.log("  Select2コンテナ:", $select.next('.select2-container').length > 0);
+
+			// デバッグ用：検索フィールドのイベントリスナーを追加
+			$select.on('select2:opening', function () {
+				console.log("ANDW Notices: Select2ドロップダウンを開いています");
+			});
+
+			$select.on('select2:open', function () {
+				console.log("ANDW Notices: Select2ドロップダウンが開きました");
+				// 検索フィールドの存在確認
+				var $searchField = $('.select2-search__field');
+				console.log("ANDW Notices: 検索フィールド要素数:", $searchField.length);
+				if ($searchField.length > 0) {
+					$searchField.on('input', function() {
+						console.log("ANDW Notices: 検索フィールドに入力:", $(this).val());
+					});
+				}
+			});
 
 		} catch (error) {
 			console.error("ANDW Notices: Select2初期化エラー:", error);
@@ -395,4 +477,126 @@ jQuery(document).ready(function($) {
 	$("#andw_notices_display_preset").on("change", updateEventPreview);
 	$("#andw_notices_event_label").on("input", updateEventPreview);
 	$("input[name=\"andw_notices_event_type\"]").on("change", updateEventPreview);
+
+	// ===== デバッグ用機能（本番時は削除） =====
+
+	// デフォルトmatcherでのテスト機能
+	function testWithDefaultMatcher() {
+		console.log("ANDW Notices: デフォルトmatcherでのテスト開始");
+
+		var $select = $("#andw_notices_target_post_id");
+		if ($select.length === 0) {
+			console.warn("ANDW Notices: テスト対象要素が見つかりません");
+			return;
+		}
+
+		// 既存のSelect2を破棄
+		if ($select.hasClass('select2-hidden-accessible')) {
+			$select.select2('destroy');
+		}
+
+		// デフォルトmatcherで初期化
+		$select.select2({
+			placeholder: "投稿・ページを選択または検索...",
+			allowClear: true,
+			width: "100%",
+			language: {
+				noResults: function() {
+					return "該当する投稿・ページが見つかりません";
+				},
+				searching: function() {
+					return "検索中...";
+				}
+			}
+			// カスタムmatcherを削除してデフォルトmatcherを使用
+		});
+
+		console.log("ANDW Notices: デフォルトmatcherでの初期化完了");
+	}
+
+	// ライブラリ情報の確認
+	function checkLibraryInfo() {
+		console.log("=== ANDW Notices: ライブラリ情報確認 ===");
+
+		// jQuery情報
+		console.log("jQuery:");
+		console.log("  バージョン:", $ ? $.fn.jquery : 'not loaded');
+
+		// Select2情報
+		if (typeof $.fn.select2 !== 'undefined') {
+			console.log("Select2:");
+			console.log("  読み込み状態: loaded");
+			console.log("  defaults存在:", !!$.fn.select2.defaults);
+
+			// Select2のバージョン情報（可能な場合）
+			if ($.fn.select2.amd && $.fn.select2.amd.require) {
+				try {
+					var version = $.fn.select2.amd.require('select2/core');
+					console.log("  core情報:", version);
+				} catch (e) {
+					console.log("  core情報: 取得失敗");
+				}
+			}
+		} else {
+			console.log("Select2: not loaded");
+		}
+
+		// 読み込まれているスクリプト確認
+		console.log("読み込まれているスクリプト:");
+		$('script[src*="select2"]').each(function(index, element) {
+			console.log("  " + (index + 1) + ":", $(element).attr('src'));
+		});
+
+		// JavaScript読み込み順序の検証
+		console.log("JavaScript読み込み順序検証:");
+		var scripts = [];
+		$('script[src]').each(function(index, element) {
+			var src = $(element).attr('src');
+			if (src.indexOf('jquery') > -1 || src.indexOf('select2') > -1 || src.indexOf('admin-meta') > -1) {
+				scripts.push({
+					order: index + 1,
+					src: src,
+					async: $(element).attr('async') !== undefined,
+					defer: $(element).attr('defer') !== undefined
+				});
+			}
+		});
+
+		scripts.forEach(function(script) {
+			console.log("  " + script.order + ":", script.src);
+			if (script.async) console.log("    → async属性あり");
+			if (script.defer) console.log("    → defer属性あり");
+		});
+
+		// wp_enqueue_script依存関係の確認
+		console.log("wp_enqueue_script依存関係:");
+		if (window.wp_enqueue_data && window.wp_enqueue_data.scripts) {
+			var relevantScripts = ['jquery', 'select2', 'select2-local', 'andw-notices-meta'];
+			relevantScripts.forEach(function(handle) {
+				if (window.wp_enqueue_data.scripts[handle]) {
+					var script = window.wp_enqueue_data.scripts[handle];
+					console.log("  " + handle + ":", script.deps || 'no deps');
+				}
+			});
+		} else {
+			console.log("  wp_enqueue_data.scripts: 利用不可");
+		}
+
+		console.log("=== End Library Info ===");
+	}
+
+	// ページ読み込み完了時にライブラリ情報を確認
+	checkLibraryInfo();
+
+	// デバッグ用：コンソールからテスト実行可能にする
+	window.andwNoticesDebug = {
+		testWithDefaultMatcher: testWithDefaultMatcher,
+		checkLibraryInfo: checkLibraryInfo,
+		initSelect2: initSelect2
+	};
+
+	console.log("ANDW Notices: デバッグ機能が利用可能です");
+	console.log("  window.andwNoticesDebug.testWithDefaultMatcher() - デフォルトmatcherテスト");
+	console.log("  window.andwNoticesDebug.checkLibraryInfo() - ライブラリ情報確認");
+	console.log("  window.andwNoticesDebug.initSelect2() - Select2手動初期化");
 });
