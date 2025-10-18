@@ -27,6 +27,8 @@ jQuery(document).ready(function($) {
 		// Select2ライブラリの存在確認
 		if (typeof $.fn.select2 === 'undefined') {
 			console.error("ANDW Notices: Select2ライブラリが読み込まれていません");
+			console.log("ANDW Notices: フォールバック処理を試行します...");
+			tryLoadSelect2Fallback();
 			return;
 		}
 
@@ -599,4 +601,89 @@ jQuery(document).ready(function($) {
 	console.log("  window.andwNoticesDebug.testWithDefaultMatcher() - デフォルトmatcherテスト");
 	console.log("  window.andwNoticesDebug.checkLibraryInfo() - ライブラリ情報確認");
 	console.log("  window.andwNoticesDebug.initSelect2() - Select2手動初期化");
+
+	// ===== フォールバック機能 =====
+
+	// Select2ライブラリの動的読み込み（フォールバック）
+	function tryLoadSelect2Fallback() {
+		console.log("ANDW Notices: Select2フォールバック読み込みを開始");
+
+		// 既にスクリプトタグが存在するかチェック
+		var existingScript = $('script[src*="select2"]');
+		if (existingScript.length > 0) {
+			console.log("ANDW Notices: Select2スクリプトタグは存在しますが、ライブラリが未読み込みです");
+			console.log("ANDW Notices: ページリロードを推奨します");
+
+			// 3秒後に再試行
+			setTimeout(function() {
+				if (typeof $.fn.select2 !== 'undefined') {
+					console.log("ANDW Notices: Select2が遅延読み込みされました。初期化を再実行します");
+					initSelect2();
+				} else {
+					console.warn("ANDW Notices: Select2の遅延読み込みに失敗しました");
+					showSelect2LoadError();
+				}
+			}, 3000);
+			return;
+		}
+
+		// 手動でSelect2を読み込み
+		var pluginUrl = extractPluginUrl();
+		if (!pluginUrl) {
+			console.error("ANDW Notices: プラグインURLの取得に失敗しました");
+			showSelect2LoadError();
+			return;
+		}
+
+		// CSSの動的読み込み
+		$('<link>')
+			.attr('type', 'text/css')
+			.attr('rel', 'stylesheet')
+			.attr('href', pluginUrl + 'assets/css/select2-4.1.0.min.css?fallback=1')
+			.appendTo('head');
+
+		// JSの動的読み込み
+		$.getScript(pluginUrl + 'assets/js/select2-4.1.0.min.js?fallback=1')
+			.done(function() {
+				console.log("ANDW Notices: Select2フォールバック読み込み成功");
+				setTimeout(function() {
+					if (typeof $.fn.select2 !== 'undefined') {
+						initSelect2();
+					} else {
+						console.error("ANDW Notices: Select2読み込み後も利用できません");
+						showSelect2LoadError();
+					}
+				}, 500);
+			})
+			.fail(function() {
+				console.error("ANDW Notices: Select2フォールバック読み込み失敗");
+				showSelect2LoadError();
+			});
+	}
+
+	// プラグインURLを現在のスクリプトタグから抽出
+	function extractPluginUrl() {
+		var scriptSrc = $('script[src*="admin-meta.js"]').attr('src');
+		if (scriptSrc) {
+			// assets/js/admin-meta.js部分を削除してプラグインのベースURLを取得
+			return scriptSrc.replace(/assets\/js\/admin-meta\.js.*$/, '');
+		}
+		return null;
+	}
+
+	// Select2読み込みエラー時の処理
+	function showSelect2LoadError() {
+		console.warn("ANDW Notices: Select2が利用できません。通常のセレクトボックスとして動作します");
+		var $select = $("#andw_notices_target_post_id");
+		if ($select.length > 0) {
+			$select.after('<p style="color: #d63638; font-size: 12px; margin: 5px 0;">⚠ 検索機能が無効になっています。ページをリロードしてください。</p>');
+		}
+	}
+
+	// デバッグ機能にフォールバック関数を追加
+	window.andwNoticesDebug.tryLoadSelect2Fallback = tryLoadSelect2Fallback;
+	window.andwNoticesDebug.extractPluginUrl = extractPluginUrl;
+
+	console.log("ANDW Notices: フォールバック機能が利用可能です");
+	console.log("  window.andwNoticesDebug.tryLoadSelect2Fallback() - Select2手動読み込み");
 });

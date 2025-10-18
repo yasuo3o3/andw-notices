@@ -73,19 +73,48 @@ class ANDW_Notices_Meta_Fields {
 				$select2_handle = 'select2';
 			} else {
 				// Local Select2 resources (WordPress.org compliant)
-				wp_enqueue_script(
-					'select2-local',
-					plugins_url( 'assets/js/select2-4.1.0.min.js', ANDW_NOTICES_PLUGIN_FILE ),
-					array( 'jquery' ),
-					'4.1.0',
-					true
-				);
-				wp_enqueue_style(
-					'select2-local',
-					plugins_url( 'assets/css/select2-4.1.0.min.css', ANDW_NOTICES_PLUGIN_FILE ),
-					array(),
-					'4.1.0'
-				);
+				// より堅牢なパス生成を使用
+				$plugin_url = defined( 'ANDW_NOTICES_PLUGIN_URL' ) ? ANDW_NOTICES_PLUGIN_URL : plugins_url( '', ANDW_NOTICES_PLUGIN_FILE );
+				$select2_js_url = $plugin_url . 'assets/js/select2-4.1.0.min.js';
+				$select2_css_url = $plugin_url . 'assets/css/select2-4.1.0.min.css';
+
+				// ファイル存在確認（開発時のみ）
+				$js_file_path = ANDW_NOTICES_PLUGIN_DIR . 'assets/js/select2-4.1.0.min.js';
+				$css_file_path = ANDW_NOTICES_PLUGIN_DIR . 'assets/css/select2-4.1.0.min.css';
+
+				// デバッグ情報（開発時のみ）
+				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+					error_log( 'ANDW Notices Debug - Select2 JS URL: ' . $select2_js_url );
+					error_log( 'ANDW Notices Debug - Select2 CSS URL: ' . $select2_css_url );
+					error_log( 'ANDW Notices Debug - JS File Exists: ' . ( file_exists( $js_file_path ) ? 'YES' : 'NO' ) );
+					error_log( 'ANDW Notices Debug - CSS File Exists: ' . ( file_exists( $css_file_path ) ? 'YES' : 'NO' ) );
+					error_log( 'ANDW Notices Debug - Plugin URL: ' . $plugin_url );
+					error_log( 'ANDW Notices Debug - Plugin Dir: ' . ANDW_NOTICES_PLUGIN_DIR );
+				}
+
+				// ファイルが存在する場合のみenqueue
+				if ( file_exists( $js_file_path ) && file_exists( $css_file_path ) ) {
+					wp_enqueue_script(
+						'select2-local',
+						$select2_js_url,
+						array( 'jquery' ),
+						'4.1.0',
+						true
+					);
+					wp_enqueue_style(
+						'select2-local',
+						$select2_css_url,
+						array(),
+						'4.1.0'
+					);
+				} else {
+					// ファイルが見つからない場合の警告
+					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+						error_log( 'ANDW Notices Error - Select2 files not found' );
+						error_log( 'ANDW Notices Error - Expected JS: ' . $js_file_path );
+						error_log( 'ANDW Notices Error - Expected CSS: ' . $css_file_path );
+					}
+				}
 			}
 
 			// 専用JSファイルを依存関係付きで登録
