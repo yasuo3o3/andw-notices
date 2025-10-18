@@ -197,37 +197,10 @@ class ANDW_Notices_Blocks {
 
 		// 並び順の設定
 		if ( 'display_date' === $attributes['orderby'] ) {
-			// display_dateメタフィールドが存在しない投稿も含めるため、meta_queryを使用
-			$args['orderby'] = array(
-				'meta_value' => 'DESC', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-				'date'       => 'DESC',
-			);
-			$args['meta_key'] = 'andw_notices_display_date'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			$args['meta_type'] = 'DATE';
-
-			// display_dateが設定されていない投稿も含めるためのmeta_query
-			$display_date_meta_query = array(
-				'relation' => 'OR',
-				array(
-					'key'     => 'andw_notices_display_date',
-					'compare' => 'EXISTS',
-				),
-				array(
-					'key'     => 'andw_notices_display_date',
-					'compare' => 'NOT EXISTS',
-				),
-			);
-
-			// 既存のmeta_queryがある場合は結合
-			if ( isset( $args['meta_query'] ) ) {
-				$args['meta_query'] = array(
-					'relation' => 'AND',
-					$args['meta_query'],
-					$display_date_meta_query,
-				);
-			} else {
-				$args['meta_query'] = $display_date_meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-			}
+			// display_dateで並び替える場合は、まず投稿日で取得してからPHPレベルでソート
+			// これにより、メタフィールドが存在しない投稿も確実に含まれる
+			$args['orderby'] = 'date';
+			$args['order'] = 'DESC'; // 一旦降順で取得
 		} else {
 			$args['orderby'] = 'date';
 		}
@@ -309,6 +282,54 @@ class ANDW_Notices_Blocks {
 			}
 
 			return $fallback_query->posts;
+		}
+
+		// display_date順でのソートが指定されている場合、PHPレベルでソート
+		if ( 'display_date' === $attributes['orderby'] && ! empty( $query->posts ) ) {
+			$posts = $query->posts;
+
+			// 各投稿の表示日を取得してソート
+			usort( $posts, function( $a, $b ) use ( $attributes ) {
+				$date_a = get_post_meta( $a->ID, 'andw_notices_display_date', true );
+				$date_b = get_post_meta( $b->ID, 'andw_notices_display_date', true );
+
+				// 表示日が未設定の場合は投稿日を使用
+				if ( empty( $date_a ) ) {
+					$date_a = $a->post_date;
+				}
+				if ( empty( $date_b ) ) {
+					$date_b = $b->post_date;
+				}
+
+				// 日付を比較可能な形式に変換
+				$timestamp_a = strtotime( $date_a );
+				$timestamp_b = strtotime( $date_b );
+
+				// 降順（新しい順）でソート
+				if ( 'desc' === strtolower( $attributes['order'] ) ) {
+					return $timestamp_b - $timestamp_a;
+				} else {
+					return $timestamp_a - $timestamp_b;
+				}
+			} );
+
+			// デバッグ情報（開発時のみ）
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				$debug_info = array();
+				foreach ( $posts as $post ) {
+					$display_date = get_post_meta( $post->ID, 'andw_notices_display_date', true );
+					$debug_info[] = sprintf(
+						'ID:%d, Title:%s, DisplayDate:%s, PostDate:%s',
+						$post->ID,
+						$post->post_title,
+						$display_date ?: 'N/A',
+						$post->post_date
+					);
+				}
+				do_action( 'andw_notices_debug', 'ソート後の投稿順序', implode( ' | ', $debug_info ) );
+			}
+
+			return $posts;
 		}
 
 		return $query->posts;
