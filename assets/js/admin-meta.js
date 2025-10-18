@@ -2,8 +2,22 @@
  * ANDW Notices Admin Meta Fields JavaScript
  * Select2統合型検索セレクトとメタフィールドの動的制御
  */
+console.log("ANDW Notices: admin-meta.js ファイル開始 - " + new Date().toISOString());
+
+// 最低限のデバッグオブジェクトを作成（エラー時でも利用可能）
+window.andwNoticesDebug = window.andwNoticesDebug || {
+	status: "initializing",
+	error: null,
+	// 即座に利用可能な基本機能
+	getStatus: function() {
+		console.log("ANDW Notices Debug Status:", this.status);
+		console.log("Available functions:", Object.keys(this));
+		return this.status;
+	}
+};
+
 jQuery(document).ready(function($) {
-	console.log("ANDW Notices: admin-meta.js 読み込み完了");
+	console.log("ANDW Notices: jQuery ready - admin-meta.js 読み込み完了 - " + new Date().toISOString());
 
 	// Datepicker初期化（イベント日付フィールド用）
 	$(".datepicker").datepicker({
@@ -715,4 +729,8 @@ jQuery(document).ready(function($) {
 	console.log("  window.andwNoticesDebug.extractPluginUrl() - プラグインURL抽出");
 	console.log("  window.andwNoticesDebug.toggleLinkTypeFields() - フィールド表示切替");
 	console.log("  window.andwNoticesDebug.retrySelect2Init() - Select2初期化リトライ");
+
+	// デバッグオブジェクトのステータス更新
+	window.andwNoticesDebug.status = "ready";
+	console.log("ANDW Notices: デバッグオブジェクト初期化完了 - " + new Date().toISOString());
 });

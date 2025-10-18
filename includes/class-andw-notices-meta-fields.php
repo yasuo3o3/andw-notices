@@ -117,12 +117,13 @@ class ANDW_Notices_Meta_Fields {
 				}
 			}
 
-			// 専用JSファイルを依存関係付きで登録
+			// 専用JSファイルを依存関係付きで登録（キャッシュバスティング付き）
+			$admin_js_version = ANDW_NOTICES_VERSION . '-' . filemtime( ANDW_NOTICES_PLUGIN_DIR . 'assets/js/admin-meta.js' );
 			wp_enqueue_script(
 				'andw-notices-meta',
 				plugins_url( 'assets/js/admin-meta.js', ANDW_NOTICES_PLUGIN_FILE ),
 				array( $select2_handle, 'jquery', 'jquery-ui-datepicker' ),
-				ANDW_NOTICES_VERSION,
+				$admin_js_version,
 				true
 			);
 
