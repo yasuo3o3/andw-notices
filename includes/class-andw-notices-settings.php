@@ -84,13 +84,6 @@ class ANDW_Notices_Settings {
 			'andw_notices_general'
 		);
 
-		add_settings_field(
-			'date_format_override',
-			__( '日付フォーマット上書き', 'andw-notices' ),
-			array( __CLASS__, 'render_date_format_field' ),
-			self::PAGE_SLUG,
-			'andw_notices_general'
-		);
 
 		add_settings_section(
 			'andw_notices_cache',
@@ -222,13 +215,6 @@ class ANDW_Notices_Settings {
 					   value="https"
 					   <?php checked( in_array( 'https', $protocols, true ) ); ?> />
 				<?php esc_html_e( 'HTTPS', 'andw-notices' ); ?>
-			</label><br />
-			<label>
-				<input type="checkbox"
-					   name="andw_notices_settings[allowed_url_protocols][]"
-					   value="ftp"
-					   <?php checked( in_array( 'ftp', $protocols, true ) ); ?> />
-				<?php esc_html_e( 'FTP', 'andw-notices' ); ?>
 			</label>
 		</fieldset>
 		<p class="description">
@@ -237,28 +223,6 @@ class ANDW_Notices_Settings {
 		<?php
 	}
 
-	/**
-	 * 日付フォーマットフィールドの表示
-	 */
-	public static function render_date_format_field() {
-		$settings = self::get_settings();
-		$value = $settings['date_format_override'];
-		?>
-		<input type="text"
-			   name="andw_notices_settings[date_format_override]"
-			   value="<?php echo esc_attr( $value ); ?>"
-			   placeholder="<?php echo esc_attr( get_option( 'date_format' ) ); ?>"
-			   class="regular-text" />
-		<p class="description">
-			<?php
-			/* translators: %s: WordPress default date format */
-			echo wp_kses_post( sprintf( __( '日付表示フォーマットを上書きします。空の場合はWordPressの設定（%s）を使用します。', 'andw-notices' ), '<code>' . get_option( 'date_format' ) . '</code>' ) );
-			?>
-			<br />
-			<?php esc_html_e( '例: Y年n月j日、Y-m-d、j F Y', 'andw-notices' ); ?>
-		</p>
-		<?php
-	}
 
 	/**
 	 * キャッシュ有効期間フィールドの表示
@@ -315,7 +279,7 @@ class ANDW_Notices_Settings {
 		}
 
 		// 許可プロトコル
-		$allowed_protocols = array( 'http', 'https', 'ftp' );
+		$allowed_protocols = array( 'http', 'https' );
 		$sanitized['allowed_url_protocols'] = array();
 		if ( isset( $input['allowed_url_protocols'] ) && is_array( $input['allowed_url_protocols'] ) ) {
 			foreach ( $input['allowed_url_protocols'] as $protocol ) {
@@ -325,8 +289,6 @@ class ANDW_Notices_Settings {
 			}
 		}
 
-		// 日付フォーマット
-		$sanitized['date_format_override'] = sanitize_text_field( $input['date_format_override'] ?? '' );
 
 		// キャッシュ期間
 		$sanitized['cache_duration'] = absint( $input['cache_duration'] ?? 3600 );
@@ -349,7 +311,6 @@ class ANDW_Notices_Settings {
 		return array(
 			'default_excerpt_length'  => 100,
 			'allowed_url_protocols'   => array( 'http', 'https' ),
-			'date_format_override'    => '',
 			'cache_duration'          => 3600,
 		);
 	}
