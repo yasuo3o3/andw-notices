@@ -102,6 +102,11 @@ phpunit.xml.dist
 *.min.js
 *.min.css
 
+# 例外：必要なライブラリファイルは含める
+!assets/js/select2-*.min.js
+!assets/css/select2-*.min.css
+!assets/css/jquery-ui-*.css
+
 # Claude Code関連
 .claude/
 .history/
