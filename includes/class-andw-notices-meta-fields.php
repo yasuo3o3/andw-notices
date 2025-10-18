@@ -84,12 +84,14 @@ class ANDW_Notices_Meta_Fields {
 
 				// デバッグ情報（開発時のみ）
 				if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-					error_log( 'ANDW Notices Debug - Select2 JS URL: ' . $select2_js_url );
-					error_log( 'ANDW Notices Debug - Select2 CSS URL: ' . $select2_css_url );
-					error_log( 'ANDW Notices Debug - JS File Exists: ' . ( file_exists( $js_file_path ) ? 'YES' : 'NO' ) );
-					error_log( 'ANDW Notices Debug - CSS File Exists: ' . ( file_exists( $css_file_path ) ? 'YES' : 'NO' ) );
-					error_log( 'ANDW Notices Debug - Plugin URL: ' . $plugin_url );
-					error_log( 'ANDW Notices Debug - Plugin Dir: ' . ANDW_NOTICES_PLUGIN_DIR );
+					do_action( 'andw_notices_debug', array(
+						'select2_js_url' => $select2_js_url,
+						'select2_css_url' => $select2_css_url,
+						'js_file_exists' => file_exists( $js_file_path ),
+						'css_file_exists' => file_exists( $css_file_path ),
+						'plugin_url' => $plugin_url,
+						'plugin_dir' => ANDW_NOTICES_PLUGIN_DIR,
+					) );
 				}
 
 				// ファイルが存在する場合のみenqueue
@@ -110,9 +112,11 @@ class ANDW_Notices_Meta_Fields {
 				} else {
 					// ファイルが見つからない場合の警告
 					if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-						error_log( 'ANDW Notices Error - Select2 files not found' );
-						error_log( 'ANDW Notices Error - Expected JS: ' . $js_file_path );
-						error_log( 'ANDW Notices Error - Expected CSS: ' . $css_file_path );
+						do_action( 'andw_notices_error', array(
+							'message' => 'Select2 files not found',
+							'expected_js' => $js_file_path,
+							'expected_css' => $css_file_path,
+						) );
 					}
 				}
 			}
