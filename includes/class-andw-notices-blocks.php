@@ -197,15 +197,37 @@ class ANDW_Notices_Blocks {
 
 		// 並び順の設定
 		if ( 'display_date' === $attributes['orderby'] ) {
-			// より安全な並び順設定：display_dateがない場合は投稿日でフォールバック
-			// 表示日順でのソートは要件のため必要
+			// display_dateメタフィールドが存在しない投稿も含めるため、meta_queryを使用
 			$args['orderby'] = array(
 				'meta_value' => 'DESC', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'date'       => 'DESC',
 			);
-			// 表示日順ソートのため必要
 			$args['meta_key'] = 'andw_notices_display_date'; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 			$args['meta_type'] = 'DATE';
+
+			// display_dateが設定されていない投稿も含めるためのmeta_query
+			$display_date_meta_query = array(
+				'relation' => 'OR',
+				array(
+					'key'     => 'andw_notices_display_date',
+					'compare' => 'EXISTS',
+				),
+				array(
+					'key'     => 'andw_notices_display_date',
+					'compare' => 'NOT EXISTS',
+				),
+			);
+
+			// 既存のmeta_queryがある場合は結合
+			if ( isset( $args['meta_query'] ) ) {
+				$args['meta_query'] = array(
+					'relation' => 'AND',
+					$args['meta_query'],
+					$display_date_meta_query,
+				);
+			} else {
+				$args['meta_query'] = $display_date_meta_query; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+			}
 		} else {
 			$args['orderby'] = 'date';
 		}
