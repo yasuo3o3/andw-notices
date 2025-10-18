@@ -2,7 +2,7 @@
 /**
  * Plugin Name: andW 新着お知らせ (andW Notices)
  * Description: 日本語UI対応の新着お知らせ管理プラグイン。カスタム投稿タイプとGutenbergブロックで、お知らせの一覧表示が簡単に行えます。
- * Version: 0.0.2
+ * Version: 0.0.3
  * Author: yasuo3o3
  * Author URI: https://yasuo-o.xyz/
  * License: GPLv2 or later
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // プラグインの定数を定義
-define( 'ANDW_NOTICES_VERSION', '0.0.2' );
+define( 'ANDW_NOTICES_VERSION', '0.0.3' );
 define( 'ANDW_NOTICES_PLUGIN_FILE', __FILE__ );
 define( 'ANDW_NOTICES_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'ANDW_NOTICES_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

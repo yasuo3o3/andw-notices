@@ -235,16 +235,24 @@ jQuery(document).ready(function($) {
 
 	// イベント日付フィールドの表示切替
 	function toggleEventFields() {
-		var eventType = $("input[name=\"andw_notices_event_data[type]\"]:checked").val();
+		var eventType = $("input[name=\"andw_notices_event_type\"]:checked").val();
+		console.log("ANDW Notices: イベントタイプ変更:", eventType);
 
+		// すべてのイベントフィールドを非表示にする
 		$(".event-field").hide();
 
+		// イベントラベルフィールドは「イベント日付なし」以外で表示
+		if (eventType && eventType !== "none") {
+			$("#event-label-field").show();
+		}
+
+		// タイプ別フィールドの表示
 		if (eventType === "single") {
-			$("#event-single-date").show();
+			$("#event-single-field").show();
 		} else if (eventType === "period") {
-			$("#event-period-dates").show();
-		} else if (eventType === "free") {
-			$("#event-free-text").show();
+			$("#event-period-field").show();
+		} else if (eventType === "text") {
+			$("#event-text-field").show();
 		}
 
 		updateEventPreview();
@@ -365,7 +373,7 @@ jQuery(document).ready(function($) {
 		console.log("ANDW Notices: プレビュー更新開始");
 
 		try {
-			var $eventTypeRadio = $("input[name=\"andw_notices_event_data[type]\"]:checked");
+			var $eventTypeRadio = $("input[name=\"andw_notices_event_type\"]:checked");
 			var eventType = $eventTypeRadio.length > 0 ? $eventTypeRadio.val() : "none";
 			var eventLabel = $("#andw_notices_event_label").val() || "";
 			var displayPreset = $("#andw_notices_display_preset").val() || "default";
@@ -476,7 +484,7 @@ jQuery(document).ready(function($) {
 	}
 
 	// イベント日付関連のイベントハンドラ
-	$("input[name=\"andw_notices_event_data[type]\"]").on("change", toggleEventFields);
+	$("input[name=\"andw_notices_event_type\"]").on("change", toggleEventFields);
 	$("#andw_notices_event_single_date, #andw_notices_event_start_date, #andw_notices_event_end_date, #andw_notices_event_free_text").on("input change", updateEventPreview);
 
 	// プレビュー更新のイベントリスナー
