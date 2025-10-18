@@ -35,6 +35,13 @@
 			"type": "boolean",
 			"default": true
 		},
+		"categories": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "number"
+			}
+		},
 		"showDate": {
 			"type": "boolean",
 			"default": true

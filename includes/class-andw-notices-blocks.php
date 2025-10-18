@@ -116,6 +116,7 @@ class ANDW_Notices_Blocks {
 			'orderby'           => 'display_date',
 			'includeExternal'   => true,
 			'includeInternal'   => true,
+			'categories'        => array(),
 			'showDate'          => true,
 			'showTitle'         => true,
 			'showExcerpt'       => true,
@@ -247,6 +248,23 @@ class ANDW_Notices_Blocks {
 			$args['meta_query'] = isset( $args['meta_query'] ) // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				? array( 'relation' => 'AND', $args['meta_query'], $meta_query )
 				: $meta_query;
+		}
+
+		// カテゴリーフィルタリング
+		if ( ! empty( $attributes['categories'] ) && is_array( $attributes['categories'] ) ) {
+			$category_ids = array_map( 'absint', $attributes['categories'] );
+			$category_ids = array_filter( $category_ids ); // 空の値を除去
+
+			if ( ! empty( $category_ids ) ) {
+				$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+					array(
+						'taxonomy' => 'andw_notice_category',
+						'field'    => 'term_id',
+						'terms'    => $category_ids,
+						'operator' => 'IN',
+					),
+				);
+			}
 		}
 
 		$query = new WP_Query( $args );

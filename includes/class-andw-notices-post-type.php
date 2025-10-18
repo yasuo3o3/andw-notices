@@ -80,9 +80,57 @@ class ANDW_Notices_Post_Type {
 			'supports'           => array( 'title', 'editor', 'excerpt', 'thumbnail' ),
 			'show_in_rest'       => true,
 			'rest_base'          => 'notices',
+			'taxonomies'         => array( 'andw_notice_category' ),
 		);
 
 		register_post_type( self::POST_TYPE, $args );
+
+		// カテゴリータクソノミーの登録
+		self::register_category_taxonomy();
+	}
+
+	/**
+	 * お知らせカテゴリータクソノミーの登録
+	 */
+	public static function register_category_taxonomy() {
+		$labels = array(
+			'name'                       => __( 'お知らせカテゴリー', 'andw-notices' ),
+			'singular_name'              => __( 'お知らせカテゴリー', 'andw-notices' ),
+			'menu_name'                  => __( 'カテゴリー', 'andw-notices' ),
+			'all_items'                  => __( 'すべてのカテゴリー', 'andw-notices' ),
+			'parent_item'                => __( '親カテゴリー', 'andw-notices' ),
+			'parent_item_colon'          => __( '親カテゴリー:', 'andw-notices' ),
+			'new_item_name'              => __( '新しいカテゴリー名', 'andw-notices' ),
+			'add_new_item'               => __( '新しいカテゴリーを追加', 'andw-notices' ),
+			'edit_item'                  => __( 'カテゴリーを編集', 'andw-notices' ),
+			'update_item'                => __( 'カテゴリーを更新', 'andw-notices' ),
+			'view_item'                  => __( 'カテゴリーを表示', 'andw-notices' ),
+			'separate_items_with_commas' => __( 'カテゴリーをカンマで区切ってください', 'andw-notices' ),
+			'add_or_remove_items'        => __( 'カテゴリーを追加または削除', 'andw-notices' ),
+			'choose_from_most_used'      => __( 'よく使われるカテゴリーから選択', 'andw-notices' ),
+			'popular_items'              => __( '人気のカテゴリー', 'andw-notices' ),
+			'search_items'               => __( 'カテゴリーを検索', 'andw-notices' ),
+			'not_found'                  => __( 'カテゴリーが見つかりません', 'andw-notices' ),
+			'no_terms'                   => __( 'カテゴリーなし', 'andw-notices' ),
+			'items_list'                 => __( 'カテゴリー一覧', 'andw-notices' ),
+			'items_list_navigation'      => __( 'カテゴリー一覧ナビゲーション', 'andw-notices' ),
+		);
+
+		$args = array(
+			'labels'            => $labels,
+			'hierarchical'      => true,
+			'public'            => true,
+			'show_ui'           => true,
+			'show_admin_column' => true,
+			'show_in_nav_menus' => true,
+			'show_tagcloud'     => true,
+			'query_var'         => true,
+			'rewrite'           => array( 'slug' => 'notice-category' ),
+			'show_in_rest'      => true,
+			'rest_base'         => 'notice-categories',
+		);
+
+		register_taxonomy( 'andw_notice_category', array( self::POST_TYPE ), $args );
 	}
 
 	/**
