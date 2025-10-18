@@ -85,24 +85,10 @@ jQuery(document).ready(function($) {
 						return "読み込み中...";
 					}
 				},
-				// デバッグ用フラグ（本番運用時はfalseに変更）
-				debugMode: true,
-
-				// 改善されたmatcher関数（data属性活用＋デバッグログ）
+				// 改善されたmatcher関数（data属性活用）
 				matcher: function(params, data) {
-					var debugLog = this.options.debugMode;
-
-					if (debugLog) {
-						console.log("=== ANDW Notices: Select2 Matcher Debug ===");
-						console.log("検索語:", params.term);
-						console.log("データ:", data);
-					}
-
 					// 検索語が空の場合は全て表示
 					if ($.trim(params.term) === "") {
-						if (debugLog) {
-							console.log("検索語が空のため全件表示");
-						}
 						return data;
 					}
 
@@ -112,7 +98,7 @@ jQuery(document).ready(function($) {
 					// オプションのテキストとdata属性を検索対象にする
 					var text = (data.text || "").toLowerCase();
 					var element = data.element;
-					var searchText = "";
+					var searchText = text;
 
 					if (element) {
 						// data属性の取得
@@ -127,34 +113,10 @@ jQuery(document).ready(function($) {
 							postSlugAttr + ' ' +
 							text
 						).toLowerCase();
-
-						if (debugLog) {
-							console.log("要素のdata属性:");
-							console.log("  search-text:", searchTextAttr);
-							console.log("  post-title:", postTitleAttr);
-							console.log("  post-slug:", postSlugAttr);
-							console.log("  element text:", text);
-							console.log("  結合後searchText:", searchText);
-						}
-					} else {
-						searchText = text;
-						if (debugLog) {
-							console.log("要素なし、textのみ:", text);
-						}
 					}
 
 					// 部分一致検索
-					var isMatch = searchText.indexOf(term) > -1;
-					if (debugLog) {
-						console.log("マッチ結果:", isMatch);
-						console.log("=== End Matcher Debug ===");
-					}
-
-					if (isMatch) {
-						return data;
-					}
-
-					return null;
+					return searchText.indexOf(term) > -1 ? data : null;
 				}
 			});
 
@@ -629,6 +591,96 @@ jQuery(document).ready(function($) {
 		console.log("=== End Library Info ===");
 	}
 
+	// ===== デバッグ用機能 =====
+
+	// デバッグ用matcher関数（詳細ログ付き）
+	function createDebugMatcher() {
+		return function(params, data) {
+			console.log("=== ANDW Notices: Select2 Matcher Debug ===");
+			console.log("検索語:", params.term);
+			console.log("データ:", data);
+
+			// 検索語が空の場合は全て表示
+			if ($.trim(params.term) === "") {
+				console.log("検索語が空のため全件表示");
+				return data;
+			}
+
+			// 検索語を小文字に変換
+			var term = params.term.toLowerCase();
+
+			// オプションのテキストとdata属性を検索対象にする
+			var text = (data.text || "").toLowerCase();
+			var element = data.element;
+			var searchText = text;
+
+			if (element) {
+				// data属性の取得
+				var searchTextAttr = $(element).data('search-text') || '';
+				var postTitleAttr = $(element).data('post-title') || '';
+				var postSlugAttr = $(element).data('post-slug') || '';
+
+				// data-search-text, data-post-title, data-post-slug属性も検索対象
+				searchText = (
+					searchTextAttr + ' ' +
+					postTitleAttr + ' ' +
+					postSlugAttr + ' ' +
+					text
+				).toLowerCase();
+
+				console.log("要素のdata属性:");
+				console.log("  search-text:", searchTextAttr);
+				console.log("  post-title:", postTitleAttr);
+				console.log("  post-slug:", postSlugAttr);
+				console.log("  element text:", text);
+				console.log("  結合後searchText:", searchText);
+			} else {
+				console.log("要素なし、textのみ:", text);
+			}
+
+			// 部分一致検索
+			var isMatch = searchText.indexOf(term) > -1;
+			console.log("マッチ結果:", isMatch);
+			console.log("=== End Matcher Debug ===");
+
+			return isMatch ? data : null;
+		};
+	}
+
+	// Select2をデバッグ用matcherで再初期化
+	function initSelect2WithDebugMatcher() {
+		console.log("ANDW Notices: デバッグ用matcherでSelect2初期化開始");
+
+		var $select = $("#andw_notices_target_post_id");
+		if ($select.length === 0) {
+			console.warn("ANDW Notices: セレクトボックス要素が見つかりません");
+			return;
+		}
+
+		// 既存のSelect2を破棄
+		if ($select.hasClass('select2-hidden-accessible')) {
+			$select.select2('destroy');
+		}
+
+		// デバッグ用matcherで初期化
+		$select.select2({
+			placeholder: "投稿・ページを選択または検索...",
+			allowClear: true,
+			width: "100%",
+			language: {
+				noResults: function() {
+					return "該当する投稿・ページが見つかりません";
+				},
+				searching: function() {
+					return "検索中...";
+				}
+			},
+			matcher: createDebugMatcher()
+		});
+
+		console.log("ANDW Notices: デバッグ用matcher初期化完了");
+	}
+
 	// ===== フォールバック機能 =====
 
 	// Select2ライブラリの動的読み込み（フォールバック）
@@ -718,7 +770,9 @@ jQuery(document).ready(function($) {
 		tryLoadSelect2Fallback: tryLoadSelect2Fallback,
 		extractPluginUrl: extractPluginUrl,
 		toggleLinkTypeFields: toggleLinkTypeFields,
-		retrySelect2Init: retrySelect2Init
+		retrySelect2Init: retrySelect2Init,
+		initSelect2WithDebugMatcher: initSelect2WithDebugMatcher,
+		createDebugMatcher: createDebugMatcher
 	};
 
 	console.log("ANDW Notices: デバッグ機能が利用可能です");
@@ -729,6 +783,7 @@ jQuery(document).ready(function($) {
 	console.log("  window.andwNoticesDebug.extractPluginUrl() - プラグインURL抽出");
 	console.log("  window.andwNoticesDebug.toggleLinkTypeFields() - フィールド表示切替");
 	console.log("  window.andwNoticesDebug.retrySelect2Init() - Select2初期化リトライ");
+	console.log("  window.andwNoticesDebug.initSelect2WithDebugMatcher() - デバッグ用matcherで初期化");
 
 	// デバッグオブジェクトのステータス更新
 	window.andwNoticesDebug.status = "ready";
