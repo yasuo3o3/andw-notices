@@ -45,7 +45,7 @@ jQuery(document).ready(function($) {
 						return "読み込み中...";
 					}
 				},
-				// 安全なmatcher関数（シンプル版）
+				// 改善されたmatcher関数（data属性活用）
 				matcher: function(params, data) {
 					// 検索語が空の場合は全て表示
 					if ($.trim(params.term) === "") {
@@ -55,11 +55,25 @@ jQuery(document).ready(function($) {
 					// 検索語を小文字に変換
 					var term = params.term.toLowerCase();
 
-					// オプションのテキストを取得
+					// オプションのテキストとdata属性を検索対象にする
 					var text = (data.text || "").toLowerCase();
+					var element = data.element;
+					var searchText = "";
 
-					// テキストにマッチするかチェック
-					if (text.indexOf(term) > -1) {
+					if (element) {
+						// data-search-text, data-post-title, data-post-slug属性も検索対象
+						searchText = (
+							($(element).data('search-text') || '') + ' ' +
+							($(element).data('post-title') || '') + ' ' +
+							($(element).data('post-slug') || '') + ' ' +
+							text
+						).toLowerCase();
+					} else {
+						searchText = text;
+					}
+
+					// 部分一致検索
+					if (searchText.indexOf(term) > -1) {
 						return data;
 					}
 
@@ -205,26 +219,56 @@ jQuery(document).ready(function($) {
 		console.log("ANDW Notices: 初期化完了");
 	}, 100);
 
-	// リンクタイプ変更時にSelect2を再初期化
-	$("input[name=\"andw_notices_link_type\"]").on("change", function() {
-		var linkType = $(this).val();
-
-		// 既存のSelect2を破棄（エラーハンドリング付き）
+	// Select2破棄処理の独立化
+	function destroySelect2() {
 		var $select = $("#andw_notices_target_post_id");
 		if ($select.length > 0 && $select.hasClass("select2-hidden-accessible")) {
 			try {
 				$select.select2("destroy");
+				console.log("ANDW Notices: Select2破棄完了");
 			} catch (error) {
 				console.warn("ANDW Notices: Select2破棄時にエラー:", error);
 			}
 		}
+	}
+
+	// Select2初期化の再試行処理
+	function retrySelect2Init() {
+		var retryCount = 0;
+		var retryInterval = setInterval(function() {
+			if ($("#link-type-internal").is(":visible") || retryCount >= 3) {
+				clearInterval(retryInterval);
+				if ($("#link-type-internal").is(":visible")) {
+					initSelect2();
+				} else {
+					console.warn("ANDW Notices: Select2初期化を諦めました（フィールドが表示されない）");
+				}
+			}
+			retryCount++;
+		}, 100);
+	}
+
+	// リンクタイプ変更時にSelect2を再初期化
+	$("input[name=\"andw_notices_link_type\"]").on("change", function() {
+		var linkType = $(this).val();
+
+		// 既存のSelect2を安全に破棄
+		destroySelect2();
 
 		// フィールド表示を更新
 		toggleLinkTypeFields();
 
-		// internalタイプの場合のみSelect2初期化
+		// internalタイプの場合のSelect2初期化（遅延実行）
 		if (linkType === "internal") {
-			setTimeout(initSelect2, 100);
+			setTimeout(function() {
+				if ($("#link-type-internal").is(":visible")) {
+					initSelect2();
+				} else {
+					// フォールバック再試行（最大3回）
+					console.log("ANDW Notices: フィールドが未表示のため再試行します");
+					retrySelect2Init();
+				}
+			}, 200);
 		}
 	});
 
